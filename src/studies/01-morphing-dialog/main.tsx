@@ -1,12 +1,15 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { PageShell } from '../../shared/PageShell'
+import { DemoControls } from '../../shared/demo-controls/DemoControls'
+import { DemoSettingsProvider } from '../../shared/demo-controls/DemoSettings'
 import '../../shared/tokens.css'
+import { App } from './App'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <PageShell title="Morphing button to dialog">
-      <p>Study 01 is in progress.</p>
-    </PageShell>
+    <DemoSettingsProvider>
+      <App />
+      <DemoControls />
+    </DemoSettingsProvider>
   </StrictMode>,
 )
