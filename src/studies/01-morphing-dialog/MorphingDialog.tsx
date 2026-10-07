@@ -156,8 +156,9 @@ export function MorphingDialog({
                     borderRadius: DIALOG_RADIUS,
                     boxShadow: DIALOG_SHADOW,
                     opacity: reduceMotion ? contentOpacity : 1,
+                    pointerEvents: 'auto',
                   }}
-                  className="pointer-events-auto w-full bg-[var(--color-surface)] p-6 md:max-w-md"
+                  className="w-full bg-[var(--color-surface)] p-6 md:max-w-md"
                 >
                   <motion.div
                     layout="position"
