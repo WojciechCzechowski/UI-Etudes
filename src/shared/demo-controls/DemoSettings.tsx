@@ -16,7 +16,7 @@ export type DemoSettings = {
   slowMotion: SlowMotion
 }
 
-const defaults: DemoSettings = {
+export const defaultSettings: DemoSettings = {
   forceError: false,
   pendingMs: 1200,
   reducedMotion: 'system',
@@ -40,7 +40,7 @@ export function DemoSettingsProvider({
   initial,
 }: DemoSettingsProviderProps) {
   const [settings, setSettings] = useState<DemoSettings>({
-    ...defaults,
+    ...defaultSettings,
     ...initial,
   })
 
@@ -74,8 +74,30 @@ export function useReduceMotion(): boolean {
   return settings.reducedMotion === 'on' || Boolean(system)
 }
 
-/** Returns a function that applies the slow motion factor to a transition. */
+/**
+ * Returns a function that applies the slow motion factor to a transition.
+ * Slow motion never applies when motion is reduced: that version of the
+ * interaction always runs at its designed speed.
+ */
 export function useScaleTransition(): (transition: Transition) => Transition {
   const { settings } = useDemoSettings()
-  return (transition) => scaleTransition(transition, settings.slowMotion)
+  const reduceMotion = useReduceMotion()
+  const factor = reduceMotion ? 1 : settings.slowMotion
+  return (transition) => scaleTransition(transition, factor)
+}
+
+/** Short labels for every setting that differs from its default. */
+export function describeTweaks(settings: DemoSettings): string[] {
+  const tweaks: string[] = []
+  if (settings.forceError) tweaks.push('Error on')
+  if (settings.pendingMs !== defaultSettings.pendingMs) {
+    tweaks.push(`Pending ${settings.pendingMs} ms`)
+  }
+  if (settings.reducedMotion !== defaultSettings.reducedMotion) {
+    tweaks.push('Reduced motion')
+  }
+  if (settings.slowMotion !== defaultSettings.slowMotion) {
+    tweaks.push(`Slow ${settings.slowMotion}x`)
+  }
+  return tweaks
 }
