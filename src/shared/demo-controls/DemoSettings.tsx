@@ -109,7 +109,7 @@ export function describeTweaks(settings: DemoSettings): string[] {
     tweaks.push('Reduced motion')
   }
   if (settings.slowMotion !== defaultSettings.slowMotion) {
-    tweaks.push(`Slow ${settings.slowMotion}x`)
+    tweaks.push(`${settings.slowMotion}x slower`)
   }
   if (settings.theme !== defaultSettings.theme) {
     tweaks.push(`${settings.theme === 'dark' ? 'Dark' : 'Light'} theme`)

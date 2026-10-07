@@ -117,9 +117,9 @@ export function App() {
             the focus rings in both themes.
           </li>
           <li>
-            <strong>Slow motion.</strong> Runs the morph at 2x, 4x or 10x so you
-            can watch it. Look for stretched text, and for the corner radius and
-            shadow changing smoothly. Not available with reduced motion.
+            <strong>Slow motion.</strong> Runs the morph 2x, 4x or 10x slower so
+            you can watch it. Look for stretched text, and for the corner radius
+            and shadow changing smoothly. Not available with reduced motion.
           </li>
         </ul>
         <p>

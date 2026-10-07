@@ -128,7 +128,7 @@ export function DemoControls() {
                 >
                   {slowMotionOptions.map((factor) => (
                     <option key={factor} value={factor}>
-                      {factor}x
+                      {factor === 1 ? 'Normal' : `${factor}x slower`}
                     </option>
                   ))}
                 </select>

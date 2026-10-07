@@ -57,7 +57,7 @@ describe('DemoControls', () => {
     )
     const button = screen.getByRole('button', { name: 'Demo settings' })
     expect(button).toHaveAccessibleDescription(
-      'Error on · Pending 3000 ms · Slow 4x · Dark theme',
+      'Error on · Pending 3000 ms · 4x slower · Dark theme',
     )
   })
 })
