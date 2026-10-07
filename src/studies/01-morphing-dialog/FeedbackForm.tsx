@@ -6,7 +6,8 @@ import {
   useReduceMotion,
   useScaleTransition,
 } from '../../shared/demo-controls/DemoSettings'
-import { stateFade } from '../../shared/motion'
+
+import { stateFade } from './motion'
 
 type FeedbackFormProps = {
   onSubmit: (message: string) => Promise<void>
@@ -60,7 +61,7 @@ export function FeedbackForm({ onSubmit, onSent }: FeedbackFormProps) {
       aria-busy={pending}
       className="flex flex-col gap-4"
     >
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5 mb-3 relative">
         <label htmlFor="feedback-message" className="text-sm font-medium">
           Your message
         </label>
@@ -78,7 +79,7 @@ export function FeedbackForm({ onSubmit, onSent }: FeedbackFormProps) {
             setMessage(event.target.value)
             setError(null)
           }}
-          className="resize-none rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 aria-invalid:border-[var(--color-danger)]"
+          className="resize-none rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 aria-invalid:border-[var(--color-danger)]"
         />
         <AnimatePresence initial={false}>
           {error && (
@@ -86,7 +87,7 @@ export function FeedbackForm({ onSubmit, onSent }: FeedbackFormProps) {
               key={error}
               id="feedback-message-error"
               role="alert"
-              className="text-sm text-[var(--color-danger)]"
+              className="text-sm text-[var(--color-danger)] absolute -bottom-1 left-0 translate-y-full"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -99,13 +100,13 @@ export function FeedbackForm({ onSubmit, onSent }: FeedbackFormProps) {
       </div>
       <output className="sr-only">{pending ? 'Sending message...' : ''}</output>
       <div className="flex justify-end gap-2">
-        <Dialog.Close className="rounded-[var(--radius-sm)] px-4 py-2 font-medium hover:bg-[var(--color-border)]">
+        <Dialog.Close className="rounded-[var(--radius-md)] px-4 py-2 font-medium hover:bg-[var(--color-border)]">
           Cancel
         </Dialog.Close>
         <button
           type="submit"
           aria-disabled={pending}
-          className="flex min-w-28 items-center justify-center gap-2 rounded-[var(--radius-sm)] bg-[var(--color-accent)] px-4 py-2 font-medium text-[var(--color-accent-text)] aria-disabled:opacity-70"
+          className="flex min-w-28 items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-accent)] px-4 py-2 font-medium text-[var(--color-accent-text)] transition-colors duration-150 hover:not-aria-disabled:bg-[var(--color-accent-hover)] aria-disabled:opacity-70"
         >
           {pending && !reduceMotion && (
             <span

@@ -12,6 +12,13 @@
   --color-accent: light-dark(#2563eb, #60a5fa);
   --color-accent-text: light-dark(#ffffff, #0c0a09);
   --color-danger: light-dark(#b91c1c, #f87171);
+  /* Accent mixed toward the text colour: darker in light theme, lighter in
+     dark theme, so the contrast with the accent text goes up in both. */
+  --color-accent-hover: color-mix(
+    in srgb,
+    var(--color-accent) 85%,
+    var(--color-text)
+  );
 
   --radius-sm: 6px;
   --radius-md: 12px;
@@ -35,4 +42,20 @@ body {
     -apple-system,
     'Segoe UI',
     sans-serif;
+}
+
+/* Tailwind v4 resets buttons to the default cursor. Interactive controls get
+   a pointer, and a control that is busy or disabled does not. */
+@layer base {
+  button,
+  [role='radio'],
+  select,
+  summary {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled='true'] {
+    cursor: default;
+  }
 }
