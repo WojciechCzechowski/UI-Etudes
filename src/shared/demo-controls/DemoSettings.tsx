@@ -1,10 +1,12 @@
 import { MotionConfig, useReducedMotion } from 'motion/react'
 import type { Transition } from 'motion/react'
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { scaleTransition } from '../motion'
 
 export type SlowMotion = 1 | 2 | 4 | 10
+
+export type Theme = 'system' | 'light' | 'dark'
 
 export type DemoSettings = {
   /** Makes the next submit fail. */
@@ -14,6 +16,8 @@ export type DemoSettings = {
   /** `on` previews reduced motion without changing OS settings. */
   reducedMotion: 'system' | 'on'
   slowMotion: SlowMotion
+  /** Overrides the OS theme through `data-theme` on <html>. */
+  theme: Theme
 }
 
 export const defaultSettings: DemoSettings = {
@@ -21,6 +25,7 @@ export const defaultSettings: DemoSettings = {
   pendingMs: 1200,
   reducedMotion: 'system',
   slowMotion: 1,
+  theme: 'system',
 }
 
 type DemoSettingsContext = {
@@ -43,6 +48,13 @@ export function DemoSettingsProvider({
     ...defaultSettings,
     ...initial,
   })
+
+  const { theme } = settings
+  useEffect(() => {
+    const root = document.documentElement
+    if (theme === 'system') delete root.dataset.theme
+    else root.dataset.theme = theme
+  }, [theme])
 
   function update(patch: Partial<DemoSettings>) {
     setSettings((current) => ({ ...current, ...patch }))
@@ -98,6 +110,9 @@ export function describeTweaks(settings: DemoSettings): string[] {
   }
   if (settings.slowMotion !== defaultSettings.slowMotion) {
     tweaks.push(`Slow ${settings.slowMotion}x`)
+  }
+  if (settings.theme !== defaultSettings.theme) {
+    tweaks.push(`${settings.theme === 'dark' ? 'Dark' : 'Light'} theme`)
   }
   return tweaks
 }

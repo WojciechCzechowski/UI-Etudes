@@ -1,15 +1,20 @@
-import { Settings } from 'lucide-react'
-import { Popover } from 'radix-ui'
+import { Monitor, Moon, Settings, Sun } from 'lucide-react'
+import { Popover, RadioGroup } from 'radix-ui'
 import {
   describeTweaks,
   useDemoSettings,
   useReduceMotion,
 } from './DemoSettings'
-import type { SlowMotion } from './DemoSettings'
-import { ThemeSwitch } from './ThemeSwitch'
+import type { SlowMotion, Theme } from './DemoSettings'
 
 const pendingOptions = [400, 1200, 3000]
 const slowMotionOptions: SlowMotion[] = [1, 2, 4, 10]
+
+const themeOptions = [
+  { value: 'system', label: 'System', Icon: Monitor },
+  { value: 'light', label: 'Light', Icon: Sun },
+  { value: 'dark', label: 'Dark', Icon: Moon },
+] as const
 
 const fieldClass =
   'rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg)] px-2 py-1 disabled:opacity-50'
@@ -47,6 +52,26 @@ export function DemoControls() {
             aria-label="Demo settings"
             className="z-40 flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-sm shadow-lg"
           >
+            <div className="flex flex-col gap-1.5">
+              <span id="demo-theme-label">Theme</span>
+              <RadioGroup.Root
+                aria-labelledby="demo-theme-label"
+                value={settings.theme}
+                onValueChange={(value) => update({ theme: value as Theme })}
+                className="grid grid-cols-3 gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] p-1"
+              >
+                {themeOptions.map(({ value, label, Icon }) => (
+                  <RadioGroup.Item
+                    key={value}
+                    value={value}
+                    className="flex items-center justify-center gap-1.5 rounded-[var(--radius-sm)] px-2 py-1.5 hover:bg-[var(--color-border)] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--color-accent)] data-[state=checked]:bg-[var(--color-accent)] data-[state=checked]:text-[var(--color-accent-text)]"
+                  >
+                    <Icon aria-hidden="true" className="size-4" />
+                    {label}
+                  </RadioGroup.Item>
+                ))}
+              </RadioGroup.Root>
+            </div>
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -123,7 +148,6 @@ export function DemoControls() {
           </Popover.Content>
         </Popover.Portal>
       </Popover.Root>
-      <ThemeSwitch />
     </div>
   )
 }

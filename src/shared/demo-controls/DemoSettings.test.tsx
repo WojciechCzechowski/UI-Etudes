@@ -1,6 +1,7 @@
-import { render, renderHook, screen } from '@testing-library/react'
+import { render, renderHook, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { DemoControls } from './DemoControls'
 import { DemoSettingsProvider, useScaleTransition } from './DemoSettings'
 import type { DemoSettings } from './DemoSettings'
@@ -44,14 +45,49 @@ describe('DemoControls', () => {
   it('lists every tweaked setting next to the button', () => {
     render(
       <DemoSettingsProvider
-        initial={{ forceError: true, pendingMs: 3000, slowMotion: 4 }}
+        initial={{
+          forceError: true,
+          pendingMs: 3000,
+          slowMotion: 4,
+          theme: 'dark',
+        }}
       >
         <DemoControls />
       </DemoSettingsProvider>,
     )
     const button = screen.getByRole('button', { name: 'Demo settings' })
     expect(button).toHaveAccessibleDescription(
-      'Error on · Pending 3000 ms · Slow 4x',
+      'Error on · Pending 3000 ms · Slow 4x · Dark theme',
     )
+  })
+})
+
+describe('theme', () => {
+  afterEach(() => {
+    delete document.documentElement.dataset.theme
+  })
+
+  it('is picked with one click in the settings and applied to the root', async () => {
+    const user = userEvent.setup()
+    render(
+      <DemoSettingsProvider>
+        <DemoControls />
+      </DemoSettingsProvider>,
+    )
+    const root = document.documentElement
+    expect(root).not.toHaveAttribute('data-theme')
+
+    await user.click(screen.getByRole('button', { name: 'Demo settings' }))
+    const group = screen.getByRole('radiogroup', { name: 'Theme' })
+    expect(within(group).getByRole('radio', { name: 'System' })).toBeChecked()
+
+    await user.click(within(group).getByRole('radio', { name: 'Dark' }))
+    expect(root).toHaveAttribute('data-theme', 'dark')
+
+    await user.click(within(group).getByRole('radio', { name: 'Light' }))
+    expect(root).toHaveAttribute('data-theme', 'light')
+
+    await user.click(within(group).getByRole('radio', { name: 'System' }))
+    expect(root).not.toHaveAttribute('data-theme')
   })
 })
