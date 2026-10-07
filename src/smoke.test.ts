@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 
-test('test setup runs', () => {
-  expect(1 + 1).toBe(2)
+test('jsdom and jest-dom are wired up', () => {
+  document.body.innerHTML = '<p>hi</p>'
+  expect(document.querySelector('p')).toBeInTheDocument()
 })
