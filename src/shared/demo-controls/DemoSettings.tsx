@@ -7,7 +7,7 @@ import { scaleTransition } from '../motion'
 export type SlowMotion = 1 | 2 | 4 | 10
 
 export type DemoSettings = {
-  /** Makes Create fail with the duplicate name error. */
+  /** Makes the next submit fail. */
   forceError: boolean
   /** How long the pending state lasts, in milliseconds. */
   pendingMs: number

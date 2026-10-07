@@ -1,3 +1,4 @@
+import { Settings } from 'lucide-react'
 import { Popover } from 'radix-ui'
 import {
   describeTweaks,
@@ -11,24 +12,6 @@ const slowMotionOptions: SlowMotion[] = [1, 2, 4, 10]
 
 const fieldClass =
   'rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg)] px-2 py-1 disabled:opacity-50'
-
-function GearIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="size-5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  )
-}
 
 export function DemoControls() {
   const { settings, update } = useDemoSettings()
@@ -53,7 +36,7 @@ export function DemoControls() {
             aria-describedby={tweaks.length > 0 ? 'demo-tweaks' : undefined}
             className="grid size-10 shrink-0 place-items-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
           >
-            <GearIcon />
+            <Settings aria-hidden="true" className="size-5" />
           </button>
         </Popover.Trigger>
         <Popover.Portal>
@@ -71,7 +54,7 @@ export function DemoControls() {
                   update({ forceError: event.target.checked })
                 }
               />
-              Trigger the validation error
+              Make sending fail
             </label>
             <label className="flex items-center justify-between gap-3">
               Pending duration

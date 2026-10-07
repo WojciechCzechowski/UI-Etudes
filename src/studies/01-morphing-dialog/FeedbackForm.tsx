@@ -7,36 +7,31 @@ import {
   useScaleTransition,
 } from '../../shared/demo-controls/DemoSettings'
 import { stateFade } from '../../shared/motion'
-import { DuplicateFolderError } from './folders'
 
-type NewFolderFormProps = {
-  onSubmit: (name: string) => Promise<void>
-  onCreated: (name: string) => void
+type FeedbackFormProps = {
+  onSubmit: (message: string) => Promise<void>
+  onSent: () => void
 }
 
-const emptyNameMessage = 'Enter a folder name.'
-const genericErrorMessage = 'Could not create the folder. Try again.'
-
-function duplicateMessage(name: string) {
-  return `A folder named "${name}" already exists here. Choose a different name.`
-}
+const emptyMessage = 'Write a message first.'
+const failedMessage = 'Could not send your message. Try again.'
 
 function isAbort(error: unknown) {
   return error instanceof DOMException && error.name === 'AbortError'
 }
 
-export function NewFolderForm({ onSubmit, onCreated }: NewFolderFormProps) {
-  const [name, setName] = useState('')
+export function FeedbackForm({ onSubmit, onSent }: FeedbackFormProps) {
+  const [message, setMessage] = useState('')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const fieldRef = useRef<HTMLTextAreaElement>(null)
   const reduceMotion = useReduceMotion()
   const scale = useScaleTransition()
 
-  function fail(message: string) {
-    setError(message)
+  function fail(text: string) {
+    setError(text)
     setPending(false)
-    inputRef.current?.focus()
+    fieldRef.current?.focus()
   }
 
   async function handleSubmit(event: FormEvent) {
@@ -44,21 +39,17 @@ export function NewFolderForm({ onSubmit, onCreated }: NewFolderFormProps) {
     // aria-disabled does not block submit, so ignore it here.
     if (pending) return
 
-    const trimmed = name.trim()
-    if (!trimmed) return fail(emptyNameMessage)
+    const trimmed = message.trim()
+    if (!trimmed) return fail(emptyMessage)
 
     setError(null)
     setPending(true)
     try {
       await onSubmit(trimmed)
-      onCreated(trimmed)
+      onSent()
     } catch (caught) {
       if (isAbort(caught)) return
-      fail(
-        caught instanceof DuplicateFolderError
-          ? duplicateMessage(caught.folderName)
-          : genericErrorMessage,
-      )
+      fail(failedMessage)
     }
   }
 
@@ -70,30 +61,30 @@ export function NewFolderForm({ onSubmit, onCreated }: NewFolderFormProps) {
       className="flex flex-col gap-4"
     >
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="folder-name" className="text-sm font-medium">
-          Folder name
+        <label htmlFor="feedback-message" className="text-sm font-medium">
+          Your message
         </label>
-        <input
-          ref={inputRef}
-          id="folder-name"
-          name="name"
-          value={name}
+        <textarea
+          ref={fieldRef}
+          id="feedback-message"
+          name="message"
+          rows={4}
+          value={message}
           readOnly={pending}
-          autoComplete="off"
-          placeholder="Tax 2026"
+          placeholder="For example: the export button did nothing."
           aria-invalid={error ? true : undefined}
-          aria-describedby={error ? 'folder-name-error' : undefined}
+          aria-describedby={error ? 'feedback-message-error' : undefined}
           onChange={(event) => {
-            setName(event.target.value)
+            setMessage(event.target.value)
             setError(null)
           }}
-          className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 aria-invalid:border-[var(--color-danger)]"
+          className="resize-none rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 aria-invalid:border-[var(--color-danger)]"
         />
         <AnimatePresence initial={false}>
           {error && (
             <motion.p
               key={error}
-              id="folder-name-error"
+              id="feedback-message-error"
               role="alert"
               className="text-sm text-[var(--color-danger)]"
               initial={{ opacity: 0 }}
@@ -106,7 +97,7 @@ export function NewFolderForm({ onSubmit, onCreated }: NewFolderFormProps) {
           )}
         </AnimatePresence>
       </div>
-      <output className="sr-only">{pending ? 'Creating folder...' : ''}</output>
+      <output className="sr-only">{pending ? 'Sending message...' : ''}</output>
       <div className="flex justify-end gap-2">
         <Dialog.Close className="rounded-[var(--radius-sm)] px-4 py-2 font-medium hover:bg-[var(--color-border)]">
           Cancel
@@ -122,7 +113,7 @@ export function NewFolderForm({ onSubmit, onCreated }: NewFolderFormProps) {
               className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent"
             />
           )}
-          {pending ? 'Creating...' : 'Create'}
+          {pending ? 'Sending...' : 'Send'}
         </button>
       </div>
     </form>

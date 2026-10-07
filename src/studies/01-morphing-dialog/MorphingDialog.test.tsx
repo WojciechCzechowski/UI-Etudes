@@ -2,32 +2,31 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { DemoSettingsProvider } from '../../shared/demo-controls/DemoSettings'
-import { DuplicateFolderError } from './folders'
-import type { CreateFolder } from './folders'
 import { MorphingDialog } from './MorphingDialog'
+import type { SendMessage } from './sendMessage'
 
 // Reduced motion keeps the tests independent of the layout morph, which
 // jsdom cannot measure. The open and close logic is the same in both modes.
-function setup(createFolder: CreateFolder = () => Promise.resolve()) {
-  const onCreated = vi.fn<(name: string) => void>()
+function setup(sendMessage: SendMessage = () => Promise.resolve()) {
   const user = userEvent.setup()
   render(
     <DemoSettingsProvider initial={{ reducedMotion: 'on' }}>
-      <MorphingDialog createFolder={createFolder} onCreated={onCreated} />
+      <MorphingDialog sendMessage={sendMessage} />
     </DemoSettingsProvider>,
   )
-  const button = screen.getByRole('button', { name: 'New folder' })
-  return { user, button, onCreated }
+  const button = screen.getByRole('button', { name: 'Send feedback' })
+  return { user, button }
 }
 
-async function openAndSubmit(
+async function openAndSend(
   user: ReturnType<typeof userEvent.setup>,
   button: HTMLElement,
-  name: string,
+  message: string,
 ) {
   await user.click(button)
-  await user.type(await screen.findByLabelText('Folder name'), name)
-  await user.click(screen.getByRole('button', { name: 'Create' }))
+  const field = await screen.findByLabelText('Your message')
+  if (message) await user.type(field, message)
+  await user.click(screen.getByRole('button', { name: 'Send' }))
 }
 
 describe('MorphingDialog', () => {
@@ -51,35 +50,48 @@ describe('MorphingDialog', () => {
     await waitFor(() => expect(button).toHaveFocus())
   })
 
-  it('announces the validation error', async () => {
-    const { user, button } = setup(() =>
-      Promise.reject(new DuplicateFolderError('Invoices')),
-    )
+  it('announces a failed send and keeps the message', async () => {
+    const { user, button } = setup(() => Promise.reject(new Error('offline')))
 
-    await openAndSubmit(user, button, 'Invoices')
+    await openAndSend(user, button, 'The export button did nothing.')
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'A folder named "Invoices" already exists here. Choose a different name.',
+      'Could not send your message. Try again.',
     )
-    expect(screen.getByLabelText('Folder name')).toBeInvalid()
+    const field = screen.getByLabelText('Your message')
+    expect(field).toBeInvalid()
+    expect(field).toHaveValue('The export button did nothing.')
+    expect(field).toHaveFocus()
   })
 
-  it('disables Create while pending', async () => {
-    const createFolder = vi.fn<CreateFolder>(() => new Promise(() => {}))
-    const { user, button } = setup(createFolder)
+  it('announces an empty message without sending', async () => {
+    const sendMessage = vi.fn<SendMessage>(() => Promise.resolve())
+    const { user, button } = setup(sendMessage)
 
-    await openAndSubmit(user, button, 'Receipts 2026')
+    await openAndSend(user, button, '')
 
-    const create = await screen.findByRole('button', { name: 'Creating...' })
-    expect(create).toHaveAttribute('aria-disabled', 'true')
-
-    await user.click(create)
-    expect(createFolder).toHaveBeenCalledTimes(1)
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Write a message first.',
+    )
+    expect(sendMessage).not.toHaveBeenCalled()
   })
 
-  it('aborts a pending create when the dialog closes', async () => {
+  it('disables Send while pending', async () => {
+    const sendMessage = vi.fn<SendMessage>(() => new Promise(() => {}))
+    const { user, button } = setup(sendMessage)
+
+    await openAndSend(user, button, 'Hello')
+
+    const send = await screen.findByRole('button', { name: 'Sending...' })
+    expect(send).toHaveAttribute('aria-disabled', 'true')
+
+    await user.click(send)
+    expect(sendMessage).toHaveBeenCalledTimes(1)
+  })
+
+  it('aborts a pending send when the dialog closes', async () => {
     let signal: AbortSignal | undefined
-    const { user, button, onCreated } = setup((_name, options) => {
+    const { user, button } = setup((_message, options) => {
       signal = options.signal
       return new Promise((_resolve, reject) => {
         options.signal.addEventListener('abort', () =>
@@ -88,12 +100,22 @@ describe('MorphingDialog', () => {
       })
     })
 
-    await openAndSubmit(user, button, 'Receipts 2026')
-    await screen.findByRole('button', { name: 'Creating...' })
+    await openAndSend(user, button, 'Hello')
+    await screen.findByRole('button', { name: 'Sending...' })
     await user.keyboard('{Escape}')
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     expect(signal?.aborted).toBe(true)
-    expect(onCreated).not.toHaveBeenCalled()
+    expect(screen.queryByText('Message sent')).toBeNull()
+  })
+
+  it('closes and announces when the message is sent', async () => {
+    const { user, button } = setup()
+
+    await openAndSend(user, button, 'Thanks, the export works now.')
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(screen.getByText('Message sent')).toBeInTheDocument()
+    await waitFor(() => expect(button).toHaveFocus())
   })
 })
