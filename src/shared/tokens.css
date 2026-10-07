@@ -1,33 +1,29 @@
 @import 'tailwindcss';
 
-/* Design tokens. Light is the default, dark follows the OS. */
+/* Design tokens as light-dark(light, dark). The theme follows the OS unless
+   <html data-theme="light|dark"> overrides it. */
 :root {
   color-scheme: light dark;
-  --color-bg: #fafaf9;
-  --color-surface: #ffffff;
-  --color-text: #1c1917;
-  --color-text-muted: #57534e;
-  --color-border: #e7e5e4;
-  --color-accent: #2563eb;
-  --color-accent-text: #ffffff;
-  --color-danger: #b91c1c;
+  --color-bg: light-dark(#fafaf9, #0c0a09);
+  --color-surface: light-dark(#ffffff, #1c1917);
+  --color-text: light-dark(#1c1917, #fafaf9);
+  --color-text-muted: light-dark(#57534e, #a8a29e);
+  --color-border: light-dark(#e7e5e4, #292524);
+  --color-accent: light-dark(#2563eb, #60a5fa);
+  --color-accent-text: light-dark(#ffffff, #0c0a09);
+  --color-danger: light-dark(#b91c1c, #f87171);
 
   --radius-sm: 6px;
   --radius-md: 12px;
   --radius-lg: 20px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #0c0a09;
-    --color-surface: #1c1917;
-    --color-text: #fafaf9;
-    --color-text-muted: #a8a29e;
-    --color-border: #292524;
-    --color-accent: #60a5fa;
-    --color-accent-text: #0c0a09;
-    --color-danger: #f87171;
-  }
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 body {

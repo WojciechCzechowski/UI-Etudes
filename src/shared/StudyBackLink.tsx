@@ -5,7 +5,7 @@ export function StudyBackLink() {
         href="../"
         className="rounded-[var(--radius-sm)] underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
       >
-        ← All studies
+        ← All études
       </a>
     </nav>
   )

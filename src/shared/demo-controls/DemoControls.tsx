@@ -6,6 +6,7 @@ import {
   useReduceMotion,
 } from './DemoSettings'
 import type { SlowMotion } from './DemoSettings'
+import { ThemeSwitch } from './ThemeSwitch'
 
 const pendingOptions = [400, 1200, 3000]
 const slowMotionOptions: SlowMotion[] = [1, 2, 4, 10]
@@ -122,6 +123,7 @@ export function DemoControls() {
           </Popover.Content>
         </Popover.Portal>
       </Popover.Root>
+      <ThemeSwitch />
     </div>
   )
 }
