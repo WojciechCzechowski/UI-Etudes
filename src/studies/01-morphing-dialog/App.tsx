@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { PageShell } from '../../shared/PageShell'
-import { initialFolders } from './folders'
+import { useDemoSettings } from '../../shared/demo-controls/DemoSettings'
+import { fakeCreateFolder, initialFolders } from './folders'
 import { MorphingDialog } from './MorphingDialog'
 
 const files = [
@@ -22,7 +23,8 @@ const files = [
 ] as const
 
 export function App() {
-  const [folders] = useState(initialFolders)
+  const [folders, setFolders] = useState(initialFolders)
+  const { settings } = useDemoSettings()
 
   return (
     <PageShell title="Documents">
@@ -62,7 +64,16 @@ export function App() {
           ))}
         </ul>
       </section>
-      <MorphingDialog />
+      <MorphingDialog
+        createFolder={fakeCreateFolder({
+          existing: folders,
+          pendingMs: settings.pendingMs,
+          forceError: settings.forceError,
+        })}
+        onCreated={(name) =>
+          setFolders((current) => [{ name, items: 0 }, ...current])
+        }
+      />
     </PageShell>
   )
 }

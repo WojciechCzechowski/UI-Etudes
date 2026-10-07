@@ -13,6 +13,7 @@ import {
   overlayFade,
   surfaceSpring,
 } from '../../shared/motion'
+import type { CreateFolder } from './folders'
 import { NewFolderForm } from './NewFolderForm'
 
 // Radius and shadow are inline styles on purpose: Motion only corrects their
@@ -22,7 +23,15 @@ const DIALOG_RADIUS = 20
 const FAB_SHADOW = '0 4px 12px rgb(0 0 0 / 0.2)'
 const DIALOG_SHADOW = '0 24px 48px rgb(0 0 0 / 0.3)'
 
-export function MorphingDialog() {
+type MorphingDialogProps = {
+  createFolder: CreateFolder
+  onCreated: (name: string) => void
+}
+
+export function MorphingDialog({
+  createFolder,
+  onCreated,
+}: MorphingDialogProps) {
   const [open, setOpen] = useState(false)
   const reduceMotion = useReduceMotion()
   const scale = useScaleTransition()
@@ -33,6 +42,7 @@ export function MorphingDialog() {
   // `open`, so the surface only collapses once its content is gone.
   const contentOpacity = useMotionValue(0)
   const pendingClose = useRef<AnimationPlaybackControls | null>(null)
+  const request = useRef<AbortController | null>(null)
 
   const fadeIn = reduceMotion ? crossfade : contentFadeIn
   const fadeOut = reduceMotion ? crossfade : contentFadeOut
@@ -45,6 +55,8 @@ export function MorphingDialog() {
   }
 
   function closeDialog() {
+    // Closing while Create is pending cancels it: no folder is created.
+    request.current?.abort()
     const fade = animate(contentOpacity, 0, scale(fadeOut))
     pendingClose.current = fade
     // A reopen clears pendingClose, which cancels this close.
@@ -53,6 +65,17 @@ export function MorphingDialog() {
       pendingClose.current = null
       setOpen(false)
     })
+  }
+
+  function submit(name: string) {
+    const controller = new AbortController()
+    request.current = controller
+    return createFolder(name, { signal: controller.signal })
+  }
+
+  function handleCreated(name: string) {
+    onCreated(name)
+    closeDialog()
   }
 
   function handleOpenChange(next: boolean) {
@@ -137,6 +160,7 @@ export function MorphingDialog() {
                   className="pointer-events-auto w-full bg-[var(--color-surface)] p-6 md:max-w-md"
                 >
                   <motion.div
+                    layout="position"
                     style={{ opacity: reduceMotion ? 1 : contentOpacity }}
                   >
                     <Dialog.Title className="text-lg font-semibold">
@@ -146,7 +170,10 @@ export function MorphingDialog() {
                       Folders keep related files together. You can rename it
                       later.
                     </Dialog.Description>
-                    <NewFolderForm />
+                    <NewFolderForm
+                      onSubmit={submit}
+                      onCreated={handleCreated}
+                    />
                   </motion.div>
                 </motion.div>
               </motion.div>
