@@ -1,8 +1,14 @@
+import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { PageShell } from '../../shared/PageShell'
-import { useDemoSettings } from '../../shared/demo-controls/DemoSettings'
+import { DemoControls } from '../../shared/demo-controls/DemoControls'
 import { MorphingDialog } from './MorphingDialog'
 import { fakeSendMessage } from './sendMessage'
+import {
+  defaultSending,
+  describeSending,
+  SendingControls,
+} from './SendingControls'
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -16,7 +22,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 const list = 'list-disc space-y-2 pl-5'
 
 export function App() {
-  const { settings } = useDemoSettings()
+  const [sending, setSending] = useState(defaultSending)
 
   return (
     <PageShell title="Morphing button to dialog">
@@ -44,8 +50,8 @@ export function App() {
             is clearly where you return to.
           </li>
           <li>
-            When it is ready. The content fades in after the surface has settled
-            and fades out before it collapses, so text is never stretched.
+            When it is ready. The content fades in as the surface settles and
+            fades out before it collapses, so the text barely scales with it.
           </li>
         </ul>
       </Section>
@@ -117,9 +123,9 @@ export function App() {
             the focus rings in both themes.
           </li>
           <li>
-            <strong>Slow motion.</strong> Runs the morph 2x, 4x or 10x slower so
-            you can watch it. Look for stretched text, and for the corner radius
-            and shadow changing smoothly. Not available with reduced motion.
+            <strong>Slow motion.</strong> Runs the morph 2x, 4x or 8x slower so
+            you can watch it. Look for stretched text, and for the colour
+            changing smoothly. Not available with reduced motion.
           </li>
         </ul>
         <p>
@@ -147,10 +153,13 @@ export function App() {
       <div className="pb-32" />
       <MorphingDialog
         sendMessage={fakeSendMessage({
-          pendingMs: settings.pendingMs,
-          fail: settings.forceError,
+          pendingMs: sending.pendingMs,
+          fail: sending.fail,
         })}
       />
+      <DemoControls tweaks={describeSending(sending)}>
+        <SendingControls value={sending} onChange={setSending} />
+      </DemoControls>
     </PageShell>
   )
 }

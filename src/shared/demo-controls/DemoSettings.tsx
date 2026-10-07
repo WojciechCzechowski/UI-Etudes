@@ -4,15 +4,11 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { scaleTransition } from '../motion'
 
-export type SlowMotion = 1 | 2 | 4 | 10
+export type SlowMotion = 1 | 2 | 4 | 8
 
 export type Theme = 'system' | 'light' | 'dark'
 
 export type DemoSettings = {
-  /** Makes the next submit fail. */
-  forceError: boolean
-  /** How long the pending state lasts, in milliseconds. */
-  pendingMs: number
   /** `on` previews reduced motion without changing OS settings. */
   reducedMotion: 'system' | 'on'
   slowMotion: SlowMotion
@@ -21,8 +17,6 @@ export type DemoSettings = {
 }
 
 export const defaultSettings: DemoSettings = {
-  forceError: false,
-  pendingMs: 1200,
   reducedMotion: 'system',
   slowMotion: 1,
   theme: 'system',
@@ -101,10 +95,6 @@ export function useScaleTransition(): (transition: Transition) => Transition {
 /** Short labels for every setting that differs from its default. */
 export function describeTweaks(settings: DemoSettings): string[] {
   const tweaks: string[] = []
-  if (settings.forceError) tweaks.push('Error on')
-  if (settings.pendingMs !== defaultSettings.pendingMs) {
-    tweaks.push(`Pending ${settings.pendingMs} ms`)
-  }
   if (settings.reducedMotion !== defaultSettings.reducedMotion) {
     tweaks.push('Reduced motion')
   }

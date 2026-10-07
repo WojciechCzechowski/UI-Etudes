@@ -1,5 +1,8 @@
 import { Monitor, Moon, Settings, Sun } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { Popover, RadioGroup } from 'radix-ui'
+import { useId } from 'react'
+import type { ReactNode } from 'react'
 import {
   describeTweaks,
   useDemoSettings,
@@ -7,22 +10,108 @@ import {
 } from './DemoSettings'
 import type { SlowMotion, Theme } from './DemoSettings'
 
-const pendingOptions = [400, 1200, 3000]
-const slowMotionOptions: SlowMotion[] = [1, 2, 4, 10]
+export type DemoOption<T> = { value: T; label: string; Icon?: LucideIcon }
 
-const themeOptions = [
+const themeOptions: DemoOption<Theme>[] = [
   { value: 'system', label: 'System', Icon: Monitor },
   { value: 'light', label: 'Light', Icon: Sun },
   { value: 'dark', label: 'Dark', Icon: Moon },
-] as const
+]
 
-const fieldClass =
-  'rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg)] px-2 py-1 disabled:opacity-50'
+// Titled "Slow down by", so that "2x" reads as twice as slow, not twice as fast.
+const slowMotionOptions: DemoOption<SlowMotion>[] = [
+  { value: 1, label: 'Off' },
+  { value: 2, label: '2x' },
+  { value: 4, label: '4x' },
+  { value: 8, label: '8x' },
+]
 
-export function DemoControls() {
+type OptionGroupProps<T extends string | number> = {
+  label: string
+  value: T
+  options: DemoOption<T>[]
+  onChange: (value: T) => void
+  disabled?: boolean
+  describedBy?: string
+}
+
+/** A radio group styled as a row of buttons: one click picks an option. */
+export function DemoOptionGroup<T extends string | number>({
+  label,
+  value,
+  options,
+  onChange,
+  disabled,
+  describedBy,
+}: OptionGroupProps<T>) {
+  const labelId = useId()
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span id={labelId}>{label}</span>
+      <RadioGroup.Root
+        aria-labelledby={labelId}
+        aria-describedby={describedBy}
+        value={String(value)}
+        disabled={disabled}
+        onValueChange={(next) => {
+          const option = options.find(({ value }) => String(value) === next)
+          if (option) onChange(option.value)
+        }}
+        style={{
+          gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))`,
+        }}
+        className="grid gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] p-1 data-[disabled]:opacity-50"
+      >
+        {options.map(({ value, label, Icon }) => (
+          <RadioGroup.Item
+            key={value}
+            value={String(value)}
+            className="flex items-center justify-center gap-1.5 rounded-[var(--radius-sm)] px-2 py-1.5 hover:bg-[var(--color-border)] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--color-accent)] data-[disabled]:cursor-default data-[disabled]:hover:bg-transparent data-[state=checked]:bg-[var(--color-accent)] data-[state=checked]:text-[var(--color-accent-text)] data-[state=checked]:hover:bg-[var(--color-accent-hover)]"
+          >
+            {Icon && <Icon aria-hidden="true" className="size-4" />}
+            {label}
+          </RadioGroup.Item>
+        ))}
+      </RadioGroup.Root>
+    </div>
+  )
+}
+
+type SectionProps = { legend: string; children: ReactNode }
+
+/**
+ * A labelled group of related settings. The wrapper owns the spacing and the
+ * separator line: a legend ignores the padding of its fieldset, so padding on
+ * the fieldset would end up between the legend and the controls.
+ */
+export function DemoSection({ legend, children }: SectionProps) {
+  return (
+    <div className="border-t border-[var(--color-border)] py-3 first:border-t-0 first:pt-0">
+      <fieldset className="m-0 min-w-0 border-0 p-0">
+        <legend className="mb-3 p-0 text-xs font-medium text-[var(--color-text-muted)]">
+          {legend}
+        </legend>
+        <div className="flex flex-col gap-3">{children}</div>
+      </fieldset>
+    </div>
+  )
+}
+
+type DemoControlsProps = {
+  /** Sections for settings that belong to one study, after the shared ones. */
+  children?: ReactNode
+  /** Short labels for the study's settings that differ from their defaults. */
+  tweaks?: string[]
+}
+
+export function DemoControls({
+  children,
+  tweaks: studyTweaks = [],
+}: DemoControlsProps) {
   const { settings, update } = useDemoSettings()
   const reduceMotion = useReduceMotion()
-  const tweaks = describeTweaks(settings)
+  const tweaks = [...describeTweaks(settings), ...studyTweaks]
 
   return (
     <div className="fixed top-4 right-4 z-10 flex items-center gap-2">
@@ -40,7 +129,7 @@ export function DemoControls() {
             type="button"
             aria-label="Demo settings"
             aria-describedby={tweaks.length > 0 ? 'demo-tweaks' : undefined}
-            className="grid size-10 shrink-0 place-items-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+            className="grid size-10 shrink-0 place-items-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm transition-colors duration-150 hover:bg-[var(--color-border)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
           >
             <Settings aria-hidden="true" className="size-5" />
           </button>
@@ -50,101 +139,56 @@ export function DemoControls() {
             align="end"
             sideOffset={8}
             aria-label="Demo settings"
-            className="z-40 flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-sm shadow-lg"
+            className="z-40 w-72 max-w-[calc(100vw-2rem)] rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-sm shadow-lg"
           >
-            <div className="flex flex-col gap-1.5">
-              <span id="demo-theme-label">Theme</span>
-              <RadioGroup.Root
-                aria-labelledby="demo-theme-label"
-                value={settings.theme}
-                onValueChange={(value) => update({ theme: value as Theme })}
-                className="grid grid-cols-3 gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] p-1"
-              >
-                {themeOptions.map(({ value, label, Icon }) => (
-                  <RadioGroup.Item
-                    key={value}
-                    value={value}
-                    className="flex items-center justify-center gap-1.5 rounded-[var(--radius-sm)] px-2 py-1.5 hover:bg-[var(--color-border)] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--color-accent)] data-[state=checked]:bg-[var(--color-accent)] data-[state=checked]:text-[var(--color-accent-text)]"
-                  >
-                    <Icon aria-hidden="true" className="size-4" />
-                    {label}
-                  </RadioGroup.Item>
-                ))}
-              </RadioGroup.Root>
+            <div>
+              <DemoSection legend="Appearance">
+                <DemoOptionGroup
+                  label="Theme"
+                  value={settings.theme}
+                  options={themeOptions}
+                  onChange={(theme) => update({ theme })}
+                />
+              </DemoSection>
+              <DemoSection legend="Motion">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={settings.reducedMotion === 'on'}
+                    onChange={(event) =>
+                      update({
+                        reducedMotion: event.target.checked ? 'on' : 'system',
+                      })
+                    }
+                  />
+                  Preview reduced motion
+                </label>
+                <div className="flex flex-col gap-1">
+                  <DemoOptionGroup
+                    label="Slow down by"
+                    value={settings.slowMotion}
+                    options={slowMotionOptions}
+                    onChange={(slowMotion) => update({ slowMotion })}
+                    disabled={reduceMotion}
+                    describedBy={
+                      reduceMotion ? 'demo-slow-motion-note' : undefined
+                    }
+                  />
+                  {reduceMotion && (
+                    <p
+                      id="demo-slow-motion-note"
+                      className="text-xs text-[var(--color-text-muted)]"
+                    >
+                      Slow motion does not apply with reduced motion.
+                    </p>
+                  )}
+                </div>
+              </DemoSection>
+              {children}
+              <p className="border-t border-[var(--color-border)] pt-3 text-xs text-[var(--color-text-muted)]">
+                Settings change only while the dialog is closed.
+              </p>
             </div>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={settings.forceError}
-                onChange={(event) =>
-                  update({ forceError: event.target.checked })
-                }
-              />
-              Make sending fail
-            </label>
-            <label className="flex items-center justify-between gap-3">
-              Pending duration
-              <select
-                className={fieldClass}
-                value={settings.pendingMs}
-                onChange={(event) =>
-                  update({ pendingMs: Number(event.target.value) })
-                }
-              >
-                {pendingOptions.map((ms) => (
-                  <option key={ms} value={ms}>
-                    {ms} ms
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={settings.reducedMotion === 'on'}
-                onChange={(event) =>
-                  update({
-                    reducedMotion: event.target.checked ? 'on' : 'system',
-                  })
-                }
-              />
-              Preview reduced motion
-            </label>
-            <div className="flex flex-col gap-1">
-              <label className="flex items-center justify-between gap-3">
-                Slow motion
-                <select
-                  className={fieldClass}
-                  value={settings.slowMotion}
-                  disabled={reduceMotion}
-                  aria-describedby={
-                    reduceMotion ? 'demo-slow-motion-note' : undefined
-                  }
-                  onChange={(event) =>
-                    update({
-                      slowMotion: Number(event.target.value) as SlowMotion,
-                    })
-                  }
-                >
-                  {slowMotionOptions.map((factor) => (
-                    <option key={factor} value={factor}>
-                      {factor === 1 ? 'Normal' : `${factor}x slower`}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {reduceMotion && (
-                <p
-                  id="demo-slow-motion-note"
-                  className="text-xs text-[var(--color-text-muted)]"
-                >
-                  Slow motion does not apply with reduced motion.
-                </p>
-              )}
-            </div>
-            <p className="text-xs text-[var(--color-text-muted)]">
-              Settings change only while the dialog is closed.
-            </p>
           </Popover.Content>
         </Popover.Portal>
       </Popover.Root>

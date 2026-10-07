@@ -2,7 +2,7 @@ import { render, renderHook, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
-import { DemoControls } from './DemoControls'
+import { DemoControls, DemoSection } from './DemoControls'
 import { DemoSettingsProvider, useScaleTransition } from './DemoSettings'
 import type { DemoSettings } from './DemoSettings'
 
@@ -25,7 +25,7 @@ describe('slow motion', () => {
 
   it('never applies when reduced motion is previewed', () => {
     const { result } = renderHook(useScaleTransition, {
-      wrapper: wrapper({ slowMotion: 10, reducedMotion: 'on' }),
+      wrapper: wrapper({ slowMotion: 8, reducedMotion: 'on' }),
     })
     expect(result.current({ duration: 0.15 })).toEqual({ duration: 0.15 })
   })
@@ -45,20 +45,26 @@ describe('DemoControls', () => {
   it('lists every tweaked setting next to the button', () => {
     render(
       <DemoSettingsProvider
-        initial={{
-          forceError: true,
-          pendingMs: 3000,
-          slowMotion: 4,
-          theme: 'dark',
-        }}
+        initial={{ reducedMotion: 'on', slowMotion: 4, theme: 'dark' }}
       >
         <DemoControls />
       </DemoSettingsProvider>,
     )
     const button = screen.getByRole('button', { name: 'Demo settings' })
     expect(button).toHaveAccessibleDescription(
-      'Error on · Pending 3000 ms · 4x slower · Dark theme',
+      'Reduced motion · 4x slower · Dark theme',
     )
+  })
+
+  it('appends the tweaks of a study after the shared ones', () => {
+    render(
+      <DemoSettingsProvider initial={{ slowMotion: 2 }}>
+        <DemoControls tweaks={['Sending fails']} />
+      </DemoSettingsProvider>,
+    )
+    expect(
+      screen.getByRole('button', { name: 'Demo settings' }),
+    ).toHaveAccessibleDescription('2x slower · Sending fails')
   })
 })
 
@@ -89,5 +95,65 @@ describe('theme', () => {
 
     await user.click(within(group).getByRole('radio', { name: 'System' }))
     expect(root).not.toHaveAttribute('data-theme')
+  })
+})
+
+describe('option groups', () => {
+  it('pick slow motion with one click', async () => {
+    const user = userEvent.setup()
+    render(
+      <DemoSettingsProvider>
+        <DemoControls />
+      </DemoSettingsProvider>,
+    )
+    await user.click(screen.getByRole('button', { name: 'Demo settings' }))
+
+    const slow = screen.getByRole('radiogroup', { name: 'Slow down by' })
+    await user.click(within(slow).getByRole('radio', { name: '4x' }))
+
+    expect(
+      screen.getByRole('button', { name: 'Demo settings' }),
+    ).toHaveAccessibleDescription('4x slower')
+  })
+
+  it('disable slow motion while reduced motion is on', async () => {
+    const user = userEvent.setup()
+    render(
+      <DemoSettingsProvider initial={{ reducedMotion: 'on' }}>
+        <DemoControls />
+      </DemoSettingsProvider>,
+    )
+    await user.click(screen.getByRole('button', { name: 'Demo settings' }))
+
+    const slow = screen.getByRole('radiogroup', { name: 'Slow down by' })
+    expect(within(slow).getByRole('radio', { name: '4x' })).toBeDisabled()
+    expect(slow).toHaveAccessibleDescription(
+      'Slow motion does not apply with reduced motion.',
+    )
+  })
+})
+
+describe('settings sections', () => {
+  it('group shared settings first, then the sections of a study', async () => {
+    const user = userEvent.setup()
+    render(
+      <DemoSettingsProvider>
+        <DemoControls>
+          <DemoSection legend="Study">Study settings</DemoSection>
+        </DemoControls>
+      </DemoSettingsProvider>,
+    )
+    await user.click(screen.getByRole('button', { name: 'Demo settings' }))
+
+    const order = screen
+      .getAllByRole('group')
+      .map((group) => group.querySelector('legend')?.textContent)
+    expect(order).toEqual(['Appearance', 'Motion', 'Study'])
+    expect(screen.getByRole('group', { name: 'Appearance' })).toContainElement(
+      screen.getByRole('radiogroup', { name: 'Theme' }),
+    )
+    expect(screen.getByRole('group', { name: 'Motion' })).toContainElement(
+      screen.getByRole('radiogroup', { name: 'Slow down by' }),
+    )
   })
 })
