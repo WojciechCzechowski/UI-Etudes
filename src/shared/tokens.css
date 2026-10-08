@@ -20,6 +20,14 @@
     var(--color-text)
   );
 
+  /* Atmosphere behind every page: a soft accent glow at the top and a faint
+     dot grid that fades out below it. */
+  --atmosphere-glow: light-dark(
+    color-mix(in srgb, var(--color-accent) 12%, transparent),
+    color-mix(in srgb, var(--color-accent) 16%, transparent)
+  );
+  --atmosphere-dot: color-mix(in srgb, var(--color-text) 9%, transparent);
+
   --radius-sm: 6px;
   --radius-md: 12px;
   --radius-lg: 20px;
@@ -42,6 +50,38 @@ body {
     -apple-system,
     'Segoe UI',
     sans-serif;
+}
+
+/* Two fixed layers behind the page. They do not scroll, take no input and sit
+   below all content. */
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+body::before {
+  background: radial-gradient(
+    ellipse 70% 45% at 50% 0%,
+    var(--atmosphere-glow),
+    transparent
+  );
+}
+
+body::after {
+  background-image: radial-gradient(var(--atmosphere-dot) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: linear-gradient(to bottom, #000, transparent 55%);
+}
+
+@media (forced-colors: active) {
+  body::before,
+  body::after {
+    display: none;
+  }
 }
 
 /* Tailwind v4 resets buttons to the default cursor. Interactive controls get
