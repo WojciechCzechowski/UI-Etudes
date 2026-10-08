@@ -16,4 +16,10 @@ export const studies: StudyEntry[] = [
     title: 'Morphing button to dialog',
     summary: 'A floating button that grows into a dialog and back.',
   },
+  {
+    slug: 'reorder-grid',
+    dir: '02-reorder-grid',
+    title: 'Drag to reorder a thumbnail grid',
+    summary: 'Reorder photos by pointer, touch or keyboard. Every tile moves.',
+  },
 ]
