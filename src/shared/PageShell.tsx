@@ -1,15 +1,36 @@
+import { motion } from 'motion/react'
 import type { ReactNode } from 'react'
+import { useReduceMotion } from './demo-controls/DemoSettings'
+import { entrance } from './motion'
 
 type PageShellProps = {
   title: string
   children: ReactNode
+  /**
+   * Controls that are position: fixed (a floating button, the demo settings,
+   * a toast viewport). They fade in with the page but never travel, and stay
+   * outside the content so no transform sits above them.
+   */
+  floating?: ReactNode
 }
 
-export function PageShell({ title, children }: PageShellProps) {
+export function PageShell({ title, children, floating }: PageShellProps) {
+  const { container, item, fade } = entrance(useReduceMotion())
+
   return (
-    <div className="mx-auto min-h-dvh max-w-2xl px-5 py-10">
-      <h1 className="text-2xl font-semibold">{title}</h1>
-      <main className="mt-6">{children}</main>
-    </div>
+    <motion.div
+      className="mx-auto min-h-dvh max-w-2xl px-5 py-10"
+      variants={container}
+      initial="hidden"
+      animate="show"
+    >
+      <motion.h1 variants={item} className="text-2xl font-semibold">
+        {title}
+      </motion.h1>
+      <motion.main variants={item} className="mt-6">
+        {children}
+      </motion.main>
+      {floating && <motion.div variants={fade}>{floating}</motion.div>}
+    </motion.div>
   )
 }

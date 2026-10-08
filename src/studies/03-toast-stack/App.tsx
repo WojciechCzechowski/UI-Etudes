@@ -63,7 +63,25 @@ export function App() {
   }
 
   return (
-    <PageShell title="Toast stack with interruption handling">
+    <PageShell
+      title="Toast stack with interruption handling"
+      floating={
+        <>
+          <ToastViewport store={store} />
+          <DemoControls tweaks={describeToasts(settings)}>
+            <ToastControls
+              value={settings}
+              onChange={setSettings}
+              onDismissAll={() => {
+                uploads.current.forEach((stop) => stop())
+                uploads.current.clear()
+                store.dismissAll()
+              }}
+            />
+          </DemoControls>
+        </>
+      }
+    >
       <div className="flex flex-col gap-3 leading-relaxed">
         <p>
           Notifications that arrive in bursts, change while they are on screen,
@@ -210,18 +228,6 @@ export function App() {
       </Section>
 
       <div className="pb-48" />
-      <ToastViewport store={store} />
-      <DemoControls tweaks={describeToasts(settings)}>
-        <ToastControls
-          value={settings}
-          onChange={setSettings}
-          onDismissAll={() => {
-            uploads.current.forEach((stop) => stop())
-            uploads.current.clear()
-            store.dismissAll()
-          }}
-        />
-      </DemoControls>
     </PageShell>
   )
 }

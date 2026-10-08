@@ -23,7 +23,27 @@ export function App() {
   const [reloadKey, setReloadKey] = useState(0)
 
   return (
-    <PageShell title="Drag to reorder a thumbnail grid">
+    <PageShell
+      title="Drag to reorder a thumbnail grid"
+      floating={
+        <DemoControls tweaks={describeGrid(grid)}>
+          <GridControls
+            value={grid}
+            onChange={(next) => {
+              // Image settings only show on a fresh load.
+              if (
+                next.loading !== grid.loading ||
+                next.failOne !== grid.failOne
+              ) {
+                setReloadKey((key) => key + 1)
+              }
+              setGrid(next)
+            }}
+            onReload={() => setReloadKey((key) => key + 1)}
+          />
+        </DemoControls>
+      }
+    >
       <div className="flex flex-col gap-3 leading-relaxed">
         <p>
           Reorder the photos by dragging them, by touch, or from the keyboard.
@@ -120,23 +140,6 @@ export function App() {
           </li>
         </ul>
       </Section>
-
-      <DemoControls tweaks={describeGrid(grid)}>
-        <GridControls
-          value={grid}
-          onChange={(next) => {
-            // Image settings only show on a fresh load.
-            if (
-              next.loading !== grid.loading ||
-              next.failOne !== grid.failOne
-            ) {
-              setReloadKey((key) => key + 1)
-            }
-            setGrid(next)
-          }}
-          onReload={() => setReloadKey((key) => key + 1)}
-        />
-      </DemoControls>
     </PageShell>
   )
 }

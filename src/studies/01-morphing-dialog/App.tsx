@@ -25,7 +25,22 @@ export function App() {
   const [sending, setSending] = useState(defaultSending)
 
   return (
-    <PageShell title="Morphing button to dialog">
+    <PageShell
+      title="Morphing button to dialog"
+      floating={
+        <>
+          <MorphingDialog
+            sendMessage={fakeSendMessage({
+              pendingMs: sending.pendingMs,
+              fail: sending.fail,
+            })}
+          />
+          <DemoControls tweaks={describeSending(sending)}>
+            <SendingControls value={sending} onChange={setSending} />
+          </DemoControls>
+        </>
+      }
+    >
       <div className="flex flex-col gap-3 leading-relaxed">
         <p>
           A floating button opens a small dialog. The dialog grows out of the
@@ -147,15 +162,6 @@ export function App() {
       </Section>
 
       <div className="pb-32" />
-      <MorphingDialog
-        sendMessage={fakeSendMessage({
-          pendingMs: sending.pendingMs,
-          fail: sending.fail,
-        })}
-      />
-      <DemoControls tweaks={describeSending(sending)}>
-        <SendingControls value={sending} onChange={setSending} />
-      </DemoControls>
     </PageShell>
   )
 }
