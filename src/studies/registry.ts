@@ -22,4 +22,11 @@ export const studies: StudyEntry[] = [
     title: 'Drag to reorder a thumbnail grid',
     summary: 'Reorder photos by pointer, touch or keyboard. Every tile moves.',
   },
+  {
+    slug: 'toast-stack',
+    dir: '03-toast-stack',
+    title: 'Toast stack with interruption handling',
+    summary:
+      'Notifications that stack, update in place and get out of the way.',
+  },
 ]
