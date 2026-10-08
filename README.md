@@ -16,8 +16,6 @@ This is not a component library. There is nothing to install. Every study is sel
 | [Drag to reorder a thumbnail grid](src/studies/02-reorder-grid/README.md)      | Reorder photos by pointer, touch or keyboard. Every tile moves.   |
 | [Toast stack with interruption handling](src/studies/03-toast-stack/README.md) | Notifications that stack, update in place and get out of the way. |
 
-Each study folder also has a `NOTES.md` with the decisions behind it: the values, the reasons, and what was tried and dropped.
-
 ## What every study covers
 
 - **Interruptible motion.** Reversing mid-animation continues from the current state, with no jump.
