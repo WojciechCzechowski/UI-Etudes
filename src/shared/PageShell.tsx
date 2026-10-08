@@ -24,12 +24,16 @@ export function PageShell({ title, children, floating }: PageShellProps) {
       initial="hidden"
       animate="show"
     >
-      <motion.h1 variants={item} className="text-2xl font-semibold">
-        {title}
-      </motion.h1>
-      <motion.main variants={item} className="mt-6">
-        {children}
-      </motion.main>
+      {/* Plain elements pass the entrance on to the motion children inside,
+          so the title and the content still rise one after the other. */}
+      <main>
+        <motion.h1 variants={item} className="text-2xl font-semibold">
+          {title}
+        </motion.h1>
+        <motion.div variants={item} className="mt-6">
+          {children}
+        </motion.div>
+      </main>
       {floating && <motion.div variants={fade}>{floating}</motion.div>}
     </motion.div>
   )
