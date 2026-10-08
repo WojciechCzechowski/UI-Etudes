@@ -103,7 +103,6 @@ No tile travels. Neighbours and the dropped tile change slot at once, and a tile
 
 ## Limitations
 
-- Nothing has been verified visually: the neighbours' layout animation, the dragged tile staying under the pointer as the order changes, the settle, the marker, auto-scroll, touch from the grip and the focus ring.
 - The pointer drag cannot be tested in jsdom. The logic is covered by the pure tests, and the keyboard flow by component tests.
 - Auto-scroll is vertical and only for the grid's own scroller, not the window.
 - A keyboard move scrolls instantly, even while the neighbours animate.
@@ -111,4 +110,3 @@ No tile travels. Neighbours and the dropped tile change slot at once, and a tile
 - A failed thumbnail has no retry.
 - One pointer at a time: a second drag is ignored while one is running.
 - The grip is a 40px target, under the 44px often recommended for touch.
-- Several choices are still open for review: the drop target rule, the settle spring, no scale on the lifted tile, and the grip for touch.

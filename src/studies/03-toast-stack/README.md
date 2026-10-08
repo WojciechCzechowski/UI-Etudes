@@ -102,7 +102,6 @@ No travel. Cards change slot at once, enter and exit are opacity only (`0.15s` c
 
 ## Limitations
 
-- Nothing has been verified visually: the pile geometry, the springs, the crossfade on update, swipe, the tap to open, `safe-area-inset-bottom` and the focus ring.
 - Screen reader behaviour is untested. The risk is a doubled announcement if some reader does not skip the hidden Radix announcer. A test checks that only one `status` role is exposed.
 - jsdom has no layout, no `:focus-visible` and no pointer capture, so springs, heights and swipe are not covered by tests. The pure logic is (`toastStore.test.ts`, `stackLayout.test.ts`), and the flow by `ToastStack.test.tsx`.
 - A card that changes height in place changes at once, while the cards above spring to their new places, so for about `0.4s` it can overlap the one above.
@@ -110,4 +109,3 @@ No travel. Cards change slot at once, enter and exit are opacity only (`0.15s` c
 - Swipe is to the right only.
 - `Date.now()` is the clock, so a change of system time while a toast is paused can shift its remaining time.
 - Radix gives every toast a document level Escape layer. A toast that mounts after another Radix layer (such as the demo settings popover) is the highest layer, so Escape reaches the toast first.
-- Still open for review: the maximum of 3 active toasts, the spring, and the tap to open on touch.
