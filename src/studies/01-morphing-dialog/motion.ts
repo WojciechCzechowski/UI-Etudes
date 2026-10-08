@@ -4,7 +4,7 @@ import type { Transition } from 'motion/react'
 
 // Surface morph (button to dialog and back). Duration-based, so slow motion
 // is a multiplier on `duration`.
-export const surfaceDuration = 0.5
+export const surfaceDuration = 0.4
 export const surfaceSpring: Transition = {
   type: 'spring',
   duration: surfaceDuration,
