@@ -19,9 +19,7 @@ export function StudyRow({ study, variants }: StudyRowProps) {
   const summaryId = `${study.slug}-summary`
 
   return (
-    <motion.li
-      variants={variants}
-    >
+    <motion.li variants={variants}>
       <a
         href={`./${study.slug}/`}
         aria-labelledby={titleId}

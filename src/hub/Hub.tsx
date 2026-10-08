@@ -1,6 +1,6 @@
 import { motion, useReducedMotion } from 'motion/react'
+import { entrance } from '../shared/motion'
 import { studies } from '../studies/registry'
-import { entrance } from './motion'
 import { StudyRow } from './StudyRow'
 
 const muted = 'text-[var(--color-text-muted)]'
