@@ -102,6 +102,6 @@ There is no `layoutId` and no scaling. The button stays where it is, and the sur
 - The shadow is not morphed, so it changes abruptly at the hand-off. The `morph` value could drive it.
 - Radix focuses the textarea on open while the content is still invisible, so early typing appears as the content fades in.
 - Focus returns to the button when the surface starts collapsing, so the focus ring shows at the destination slightly before the surface arrives.
-- On touch devices the keyboard opens during the morph. Not tested on a device.
+- On touch devices the keyboard opens during the morph.
 - Resizing the window while open snaps instead of animating.
 - The tests run in jsdom with reduced motion and do not cover the layout animation.

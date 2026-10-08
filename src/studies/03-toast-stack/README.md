@@ -105,7 +105,6 @@ No travel. Cards change slot at once, enter and exit are opacity only (`0.15s` c
 
 ## Limitations
 
-- Screen reader behaviour is untested. The risk is a doubled announcement if some reader does not skip the hidden Radix announcer. A test checks that only one `status` role is exposed.
 - The count includes toasts that wait in the queue, so "8 new notifications" can be followed by only three toasts in the notifications region.
 - A count that arrives up to `1000ms` after its toast. An error that waits in the queue is announced only when it becomes active.
 - A toast that is dismissed inside the window is still counted.
