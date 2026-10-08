@@ -46,7 +46,7 @@ Things worth trying:
 - **Timers.** Info and success `5000ms`, error `8000ms`, progress none. They pause while the pile is open, while something in it has focus, on touch taps and while the tab is hidden. They resume with the time that was left.
 - **Bursts.** At most 3 toasts are active. The rest wait in a first in, first out queue, except that an error goes ahead of everything that is not an error.
 - **Dismissal.** The close button, a swipe to the right (threshold `50px`), or Escape on a focused toast.
-- **Screen readers.** Two always-mounted live regions: polite for information and success, assertive for errors only. A toast is announced when it becomes active and again when its kind, title or description changes. Progress is not announced. Toasts never take focus.
+- **Screen readers.** Two always-mounted live regions. An error is announced in full and assertively, when it becomes active (also from the queue, or when an upload turns into one in place) and again when its title or description changes. Information and success are only counted, politely: "1 new notification", "8 new notifications", one sentence per burst. Progress is silent. Their text is read when you reach them: F8, then Tab. Toasts never take focus.
 - **Reduced motion.** See below.
 
 ## Decisions
@@ -58,6 +58,7 @@ Things worth trying:
 - **Collapsed pile.** The front card is at `y = 0`. A card behind is scaled in X by `1 - depth * 0.05` and stretched in Y so its top edge shows `10px` per level, whatever its own height. Its content fades to 0.
 - **Expanded pile.** Every card at scale 1, offset by the summed height of the newer cards. Each card has `12px` of top padding that counts as part of its height.
 - **Close button.** Icon only, `aria-label` "Dismiss: <title>", `40px` target, always visible. A hover-only button would be invisible on touch and add a state for no gain.
+- **Counting, not reading.** An information or success toast opens a `1000ms` window. Everything that arrives inside it is added, queued toasts included, and one sentence says the total when the window ends. A toast that moves in from the queue is not counted again. An upload that turns into "3 files uploaded" counts as one. Errors are not counted. The sentence has no hint about F8, to avoid repeating it. Dismissing everything cancels a count that has not been said.
 - **Colour is never the only signal.** Info (accent), success (green), error (danger) and progress (spinner) each have their own icon.
 
 ## Gotchas
@@ -84,7 +85,7 @@ Things worth trying:
 
 **Focus after a dismiss.** When the toast that has focus goes away, focus moves to the newest toast that is left, or back to the element that had it before it entered the viewport. Radix moves focus to the viewport before calling the study, so the study checks for that too.
 
-**Announce each sentence as a new node.** Every sentence is a new paragraph in the live region and is removed after `10s`. A repeated sentence is announced again because it is a new node, and a burst queues in the screen reader instead of overwriting itself. The "N more waiting" caption is visible text only, because adding it to the live region during a burst would repeat it for every toast.
+**Each sentence is a new node.** Every sentence is a new paragraph in its live region and is removed after `10s`. A repeated sentence is announced again because it is a new node, and a burst queues in the screen reader instead of overwriting itself. The "N more waiting" caption is visible text only, because adding it to the live region during a burst would repeat it for every toast.
 
 **The card does not change height when an upload ends.** The progress bar stays after the upload finishes (full and green, or stopped and red), so the headline case does not shift the cards above it.
 
@@ -95,6 +96,8 @@ No travel. Cards change slot at once, enter and exit are opacity only (`0.15s` c
 ## Tried and dropped
 
 - Radix timers and the Radix announcer.
+- Announcing the text of every toast, politely for information and success. A toast that moved in from the queue interrupted the screen reader, and a burst read out several of them in a row.
+- Counting only the toasts that become visible. A burst would say "3 new notifications" and then "1 new notification" again for every toast that moves in from the queue.
 - A `y` offset per level in the collapsed pile.
 - React props on the viewport for hover and focus.
 - Evicting the oldest toast, or a "+N" chip, for bursts. Eviction loses messages, and a chip hides what is waiting.
@@ -103,6 +106,9 @@ No travel. Cards change slot at once, enter and exit are opacity only (`0.15s` c
 ## Limitations
 
 - Screen reader behaviour is untested. The risk is a doubled announcement if some reader does not skip the hidden Radix announcer. A test checks that only one `status` role is exposed.
+- The count includes toasts that wait in the queue, so "8 new notifications" can be followed by only three toasts in the notifications region.
+- A count that arrives up to `1000ms` after its toast. An error that waits in the queue is announced only when it becomes active.
+- A toast that is dismissed inside the window is still counted.
 - jsdom has no layout, no `:focus-visible` and no pointer capture, so springs, heights and swipe are not covered by tests. The pure logic is (`toastStore.test.ts`, `stackLayout.test.ts`), and the flow by `ToastStack.test.tsx`.
 - A card that changes height in place changes at once, while the cards above spring to their new places, so for about `0.4s` it can overlap the one above.
 - The stack does not scroll: three tall toasts open on a short screen can run off the top.

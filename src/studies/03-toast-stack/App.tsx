@@ -157,9 +157,10 @@ export function App() {
             on touch, or with Escape while a toast has the focus.
           </li>
           <li>
-            <strong>Screen readers.</strong> Information is announced politely,
-            errors assertively. A toast that changes in place is announced
-            again. Nothing moves the focus.
+            <strong>Screen readers.</strong> An error is announced in full.
+            Other toasts are only counted, once per burst: &ldquo;8 new
+            notifications&rdquo;. Their text is read when you reach them with F8
+            and Tab. Nothing moves the focus.
           </li>
           <li>
             <strong>Reduced motion.</strong> Toasts change place at once and

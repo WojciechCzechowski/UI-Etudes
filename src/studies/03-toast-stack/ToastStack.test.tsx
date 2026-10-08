@@ -9,7 +9,7 @@ import {
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { DemoSettingsProvider } from '../../shared/demo-controls/DemoSettings'
-import { createToastStore } from './toastStore'
+import { createToastStore, SUMMARY_WINDOW_MS } from './toastStore'
 import type { ToastInput } from './toastStore'
 import { ToastViewport } from './ToastViewport'
 
@@ -35,6 +35,9 @@ const failed: ToastInput = {
   title: 'Upload failed',
   description: 'report-q3.pdf is larger than 25 MB.',
 }
+
+// The count is said when its window ends. These tests use real timers.
+const waitForSummary = SUMMARY_WINDOW_MS + 1500
 
 function items() {
   return screen.queryAllByRole('listitem')
@@ -64,37 +67,70 @@ describe('ToastViewport', () => {
     expect(before).toHaveFocus()
   })
 
-  it('announces information politely and an error assertively', async () => {
+  it('says an error in full and counts information', async () => {
     const { show } = setup()
 
     show(saved)
+    show(copied)
     show(failed)
 
     await waitFor(() => {
-      expect(screen.getByRole('status')).toHaveTextContent('Draft saved.')
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Upload failed. report-q3.pdf is larger than 25 MB.',
+      )
     })
-    expect(screen.getByRole('status')).not.toHaveTextContent('Upload failed')
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Upload failed. report-q3.pdf is larger than 25 MB.',
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
+    await waitFor(
+      () =>
+        expect(screen.getByRole('status')).toHaveTextContent(
+          '2 new notifications',
+        ),
+      {
+        timeout: waitForSummary,
+      },
     )
+    expect(screen.getByRole('status')).toHaveTextContent('2 new notifications')
+    expect(screen.getByRole('status')).not.toHaveTextContent('Draft saved')
+    expect(items()).toHaveLength(3)
   })
 
-  it('announces an update in place and keeps one toast', async () => {
+  it('counts an upload that succeeds, in the same toast', async () => {
     const { store, show } = setup()
     show({ kind: 'progress', title: 'Uploading 3 files…', progress: 0.2 })
     const id = store.getState().active[0].id
     await screen.findByRole('listitem')
 
     act(() => store.update(id, { progress: 0.6 }))
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
     act(() => store.update(id, { kind: 'success', title: '3 files uploaded' }))
 
-    await waitFor(() => {
-      expect(screen.getByRole('status')).toHaveTextContent(
-        'Uploading 3 files…3 files uploaded.',
-      )
-    })
+    await within(items()[0]).findByText('3 files uploaded')
+    await waitFor(
+      () =>
+        expect(screen.getByRole('status')).toHaveTextContent(
+          '1 new notification',
+        ),
+      {
+        timeout: waitForSummary,
+      },
+    )
+    expect(screen.getByRole('status')).toHaveTextContent('1 new notification')
     expect(items()).toHaveLength(1)
-    expect(within(items()[0]).getByText('3 files uploaded')).toBeInTheDocument()
+  })
+
+  it('says an upload that fails, in the same toast', async () => {
+    const { store, show } = setup()
+    show({ kind: 'progress', title: 'Uploading 3 files…', progress: 0.2 })
+    const id = store.getState().active[0].id
+    await screen.findByRole('listitem')
+
+    act(() => store.update(id, { kind: 'error', title: 'Upload failed' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('Upload failed.')
+    })
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
+    expect(items()).toHaveLength(1)
   })
 
   it('names the close button after its toast and dismisses on click', async () => {
@@ -217,9 +253,16 @@ describe('ToastViewport', () => {
 
     show(saved)
 
-    await waitFor(() => {
-      expect(screen.getByRole('status')).toHaveTextContent('Draft saved.')
-    })
+    await waitFor(
+      () =>
+        expect(screen.getByRole('status')).toHaveTextContent(
+          '1 new notification',
+        ),
+      {
+        timeout: waitForSummary,
+      },
+    )
+    expect(screen.getByRole('status')).toHaveTextContent('1 new notification')
     // Only the study's own region is exposed. Radix's goes to a hidden node.
     expect(screen.getAllByRole('status')).toHaveLength(1)
   })

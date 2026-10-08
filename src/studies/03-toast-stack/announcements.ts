@@ -1,7 +1,10 @@
 import type { Toast } from './toastStore'
 
-// Copy for the live regions. Errors go to the assertive region, everything
-// else to the polite one.
+// Copy for the live regions. An error is announced on its own, assertively.
+// Information and success are only counted ("3 new notifications") in one
+// polite sentence per burst. Their text is read when the user reaches the
+// toast with the keyboard, so a new toast never interrupts what a screen
+// reader is saying.
 
 export type Announcement = {
   id: string
@@ -26,11 +29,26 @@ export function announcementText(toast: {
     .join(' ')
 }
 
+/** An error, said in full. */
 export function announcementFor(toast: Toast): Announcement {
   return {
     id: `announcement-${counter++}`,
-    politeness: toast.kind === 'error' ? 'assertive' : 'polite',
+    politeness: 'assertive',
     text: announcementText(toast),
+  }
+}
+
+/** "1 new notification", "8 new notifications". */
+export function summaryText(count: number) {
+  return `${count} new ${count === 1 ? 'notification' : 'notifications'}`
+}
+
+/** The count of a burst of information and success toasts. */
+export function summaryFor(count: number): Announcement {
+  return {
+    id: `announcement-${counter++}`,
+    politeness: 'polite',
+    text: summaryText(count),
   }
 }
 

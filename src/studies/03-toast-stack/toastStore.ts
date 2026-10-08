@@ -1,4 +1,4 @@
-import { announcementFor } from './announcements'
+import { announcementFor, summaryFor } from './announcements'
 import type { Announcement } from './announcements'
 
 // The state of the toast stack. The reducer is pure: time is passed in, so
@@ -44,6 +44,12 @@ export const durations: Record<ToastKind, number> = {
   error: 8000,
   progress: Infinity,
 }
+
+// Information and success toasts are counted, not read. The first one opens a
+// window of this length, everything that arrives inside it is added, and one
+// sentence says the total. A burst becomes "8 new notifications", not eight
+// interruptions.
+export const SUMMARY_WINDOW_MS = 1000
 
 export const initialState: ToastState = { active: [], queue: [], pauses: [] }
 
@@ -170,15 +176,16 @@ export function toastReducer(
   }
 }
 
-// What the live regions should say after a state change. A toast is announced
-// when it becomes active and again whenever its words change. A change to the
-// progress alone is not announced, it would be noise.
+// Errors are said in full: they need a reaction. An error is announced when it
+// becomes active, also when it comes out of the queue or replaces an upload in
+// place, and again whenever its words change. Progress is never announced.
 export function announcementsBetween(
   before: ToastState,
   after: ToastState,
 ): Announcement[] {
   const previous = new Map(before.active.map((toast) => [toast.id, toast]))
   return after.active.flatMap((toast) => {
+    if (toast.kind !== 'error') return []
     const old = previous.get(toast.id)
     const changed =
       !old ||
@@ -187,6 +194,29 @@ export function announcementsBetween(
       old.description !== toast.description
     return changed ? [announcementFor(toast)] : []
   })
+}
+
+// How many information and success toasts are new, queued ones included. A
+// toast counts when it first appears and when its words change, for example an
+// upload that turns into "3 files uploaded". Moving in from the queue does not
+// count again, and a change of progress alone is not news.
+export function countNewNotifications(
+  before: ToastState,
+  after: ToastState,
+): number {
+  const previous = new Map(
+    [...before.active, ...before.queue].map((toast) => [toast.id, toast]),
+  )
+  return [...after.active, ...after.queue].filter((toast) => {
+    if (toast.kind !== 'info' && toast.kind !== 'success') return false
+    const old = previous.get(toast.id)
+    return (
+      !old ||
+      old.kind !== toast.kind ||
+      old.title !== toast.title ||
+      old.description !== toast.description
+    )
+  }).length
 }
 
 export type ToastStore = {
@@ -243,15 +273,40 @@ export function createToastStore(maxActive = MAX_ACTIVE): ToastStore {
     }
   }
 
+  function announce(announcement: Announcement) {
+    announcementListeners.forEach((listener) => listener(announcement))
+  }
+
+  // The count of the current window, said once when the window ends.
+  let newCount = 0
+  let summaryTimer: ReturnType<typeof setTimeout> | null = null
+
+  function cancelSummary() {
+    if (summaryTimer) clearTimeout(summaryTimer)
+    summaryTimer = null
+    newCount = 0
+  }
+
+  function addToSummary(count: number) {
+    if (count === 0) return
+    newCount += count
+    summaryTimer ??= setTimeout(() => {
+      const total = newCount
+      cancelSummary()
+      announce(summaryFor(total))
+    }, SUMMARY_WINDOW_MS)
+  }
+
   function dispatch(action: ToastAction) {
     const before = state
     state = toastReducer(state, action)
+    // Dismissing everything makes a count that has not been said yet stale.
+    if (action.type === 'dismissAll') cancelSummary()
     if (state === before) return
     syncTimers()
     listeners.forEach((listener) => listener())
-    for (const announcement of announcementsBetween(before, state)) {
-      announcementListeners.forEach((listener) => listener(announcement))
-    }
+    announcementsBetween(before, state).forEach(announce)
+    addToSummary(countNewNotifications(before, state))
   }
 
   function dismiss(id: string) {

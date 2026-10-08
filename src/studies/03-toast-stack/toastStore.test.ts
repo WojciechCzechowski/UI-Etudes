@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Announcement } from './announcements'
-import { createToastStore } from './toastStore'
+import { createToastStore, SUMMARY_WINDOW_MS } from './toastStore'
 import type { ToastInput } from './toastStore'
 
 const info = (title: string): ToastInput => ({ kind: 'info', title })
@@ -91,10 +91,10 @@ describe('update in place', () => {
     const store = createToastStore(1)
     const heard: Announcement[] = []
     store.subscribeAnnouncements((announcement) => heard.push(announcement))
-    store.show(info('a'))
+    store.show(error('a'))
     const id = store.show({ kind: 'progress', title: 'Uploading…' })
 
-    store.update(id, { kind: 'success', title: 'Uploaded' })
+    store.update(id, { kind: 'error', title: 'Upload failed' })
 
     expect(heard.map(({ text }) => text)).toEqual(['a.'])
     store.dismissAll()
@@ -233,42 +233,162 @@ describe('announcements', () => {
     return heard
   }
 
-  it('sends errors to the assertive region and the rest to the polite one', () => {
+  const said = (heard: Announcement[]) =>
+    heard.map(({ politeness, text }) => [politeness, text])
+
+  it('says an error in full and at once, assertively', () => {
     const store = createToastStore()
     const heard = listen(store)
 
-    store.show({ kind: 'success', title: 'Draft saved' })
     store.show({
       kind: 'error',
       title: 'Upload failed',
       description: 'report-q3.pdf is larger than 25 MB.',
     })
 
-    expect(heard.map(({ politeness, text }) => [politeness, text])).toEqual([
-      ['polite', 'Draft saved.'],
+    expect(said(heard)).toEqual([
       ['assertive', 'Upload failed. report-q3.pdf is larger than 25 MB.'],
     ])
   })
 
-  it('announces an update in place', () => {
+  it('only counts information and success, once the window has ended', () => {
+    const store = createToastStore()
+    const heard = listen(store)
+
+    store.show({ kind: 'info', title: 'Link copied' })
+    store.show({ kind: 'success', title: 'Draft saved' })
+    expect(heard).toEqual([])
+
+    vi.advanceTimersByTime(SUMMARY_WINDOW_MS - 1)
+    expect(heard).toEqual([])
+    vi.advanceTimersByTime(1)
+    expect(said(heard)).toEqual([['polite', '2 new notifications']])
+  })
+
+  it('says "1 new notification" for a single toast', () => {
+    const store = createToastStore()
+    const heard = listen(store)
+
+    store.show(info('Link copied'))
+    vi.advanceTimersByTime(SUMMARY_WINDOW_MS)
+
+    expect(said(heard)).toEqual([['polite', '1 new notification']])
+  })
+
+  it('groups a burst into one sentence, queued toasts included', () => {
+    const store = createToastStore(3)
+    const heard = listen(store)
+
+    for (let i = 0; i < 8; i++) {
+      store.show(info(`n${i}`))
+      vi.advanceTimersByTime(75)
+    }
+    vi.advanceTimersByTime(SUMMARY_WINDOW_MS)
+
+    expect(said(heard)).toEqual([['polite', '8 new notifications']])
+  })
+
+  it('does not count a queued toast again when it moves in', () => {
+    const store = createToastStore(1)
+    const heard = listen(store)
+    const first = store.show(info('a'))
+    store.show(info('b'))
+    vi.advanceTimersByTime(SUMMARY_WINDOW_MS)
+    expect(said(heard)).toEqual([['polite', '2 new notifications']])
+
+    store.dismiss(first)
+    vi.advanceTimersByTime(SUMMARY_WINDOW_MS * 2)
+
+    expect(heard).toHaveLength(1)
+  })
+
+  it('starts a new window for toasts that arrive after the first one ended', () => {
+    const store = createToastStore()
+    const heard = listen(store)
+
+    store.show(info('a'))
+    vi.advanceTimersByTime(SUMMARY_WINDOW_MS)
+    store.show(info('b'))
+    store.show(info('c'))
+    vi.advanceTimersByTime(SUMMARY_WINDOW_MS)
+
+    expect(said(heard)).toEqual([
+      ['polite', '1 new notification'],
+      ['polite', '2 new notifications'],
+    ])
+  })
+
+  it('keeps errors out of the count and says them straight away', () => {
+    const store = createToastStore(4)
+    const heard = listen(store)
+
+    store.show(info('a'))
+    store.show(error('Upload failed'))
+    store.show(info('b'))
+    expect(said(heard)).toEqual([['assertive', 'Upload failed.']])
+
+    vi.advanceTimersByTime(SUMMARY_WINDOW_MS)
+    expect(said(heard)).toEqual([
+      ['assertive', 'Upload failed.'],
+      ['polite', '2 new notifications'],
+    ])
+  })
+
+  it('does not say anything when an upload starts or makes progress', () => {
     const store = createToastStore()
     const heard = listen(store)
     const id = store.show({ kind: 'progress', title: 'Uploading 3 files…' })
 
     store.update(id, { progress: 0.5 })
-    store.update(id, { kind: 'success', title: '3 files uploaded' })
+    vi.advanceTimersByTime(SUMMARY_WINDOW_MS)
 
-    expect(heard.map(({ text }) => text)).toEqual([
-      'Uploading 3 files…',
-      '3 files uploaded.',
+    expect(heard).toEqual([])
+  })
+
+  it('counts an upload that succeeds, in place', () => {
+    const store = createToastStore()
+    const heard = listen(store)
+    const id = store.show({ kind: 'progress', title: 'Uploading 3 files…' })
+
+    store.update(id, { progress: 0.7 })
+    store.update(id, { kind: 'success', title: '3 files uploaded' })
+    vi.advanceTimersByTime(SUMMARY_WINDOW_MS)
+
+    expect(said(heard)).toEqual([['polite', '1 new notification']])
+  })
+
+  it('says an upload that fails, in place, as an error', () => {
+    const store = createToastStore()
+    const heard = listen(store)
+    const id = store.show({ kind: 'progress', title: 'Uploading 3 files…' })
+
+    store.update(id, { progress: 0.7 })
+    store.update(id, { kind: 'error', title: 'Upload failed' })
+    vi.advanceTimersByTime(SUMMARY_WINDOW_MS)
+
+    expect(said(heard)).toEqual([['assertive', 'Upload failed.']])
+  })
+
+  it('counts a queued upload that finishes while it waits', () => {
+    const store = createToastStore(1)
+    const heard = listen(store)
+    store.show(error('a'))
+    const id = store.show({ kind: 'progress', title: 'Uploading…' })
+
+    store.update(id, { kind: 'success', title: 'Uploaded' })
+    vi.advanceTimersByTime(SUMMARY_WINDOW_MS)
+
+    expect(said(heard)).toEqual([
+      ['assertive', 'a.'],
+      ['polite', '1 new notification'],
     ])
   })
 
-  it('announces a queued toast when it becomes active, not when it is queued', () => {
+  it('says a queued error when it becomes active, not when it is queued', () => {
     const store = createToastStore(1)
     const heard = listen(store)
-    const first = store.show(info('a'))
-    store.show(info('b'))
+    const first = store.show(error('a'))
+    store.show(error('b'))
     expect(heard).toHaveLength(1)
 
     store.dismiss(first)
@@ -276,12 +396,23 @@ describe('announcements', () => {
     expect(heard.map(({ text }) => text)).toEqual(['a.', 'b.'])
   })
 
-  it('announces the same text twice when it is shown twice', () => {
+  it('drops a count that has not been said when everything is dismissed', () => {
     const store = createToastStore()
     const heard = listen(store)
 
-    store.show(info('Draft saved'))
-    store.show(info('Draft saved'))
+    store.show(info('a'))
+    store.dismissAll()
+    vi.advanceTimersByTime(SUMMARY_WINDOW_MS * 2)
+
+    expect(heard).toEqual([])
+  })
+
+  it('says the same text twice when it is shown twice', () => {
+    const store = createToastStore()
+    const heard = listen(store)
+
+    store.show(error('Upload failed'))
+    store.show(error('Upload failed'))
 
     expect(heard).toHaveLength(2)
     expect(heard[0].id).not.toBe(heard[1].id)

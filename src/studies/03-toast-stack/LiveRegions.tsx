@@ -11,11 +11,12 @@ type LiveRegionsProps = {
 }
 
 /**
- * Two live regions that are always mounted: polite for information, assertive
- * only for errors. Radix reads a toast once when it mounts and not when it is
- * updated, so the study says everything itself. Each sentence is a new
- * paragraph, so the same text twice is announced twice and a burst is queued
- * by the screen reader instead of overwritten.
+ * Two live regions that are always mounted: assertive for errors, polite for
+ * the count of new information and success toasts. Radix reads a toast once
+ * when it mounts and not when it is updated, so the study says everything
+ * itself. Each sentence is a new paragraph, so the same text twice is
+ * announced twice and a burst is queued by the screen reader instead of
+ * overwritten.
  */
 export function LiveRegions({ store }: LiveRegionsProps) {
   const [messages, setMessages] = useState<Announcement[]>([])
