@@ -185,9 +185,6 @@ export function DemoControls({
                 </div>
               </DemoSection>
               {children}
-              <p className="border-t border-[var(--color-border)] pt-3 text-xs text-[var(--color-text-muted)]">
-                Settings change only while the dialog is closed.
-              </p>
             </div>
           </Popover.Content>
         </Popover.Portal>

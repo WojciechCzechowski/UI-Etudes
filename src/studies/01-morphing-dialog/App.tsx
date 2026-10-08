@@ -37,6 +37,9 @@ export function App() {
           />
           <DemoControls tweaks={describeSending(sending)}>
             <SendingControls value={sending} onChange={setSending} />
+            <p className="border-t border-[var(--color-border)] pt-3 text-xs text-[var(--color-text-muted)]">
+              Settings change only while the dialog is closed.
+            </p>
           </DemoControls>
         </>
       }
