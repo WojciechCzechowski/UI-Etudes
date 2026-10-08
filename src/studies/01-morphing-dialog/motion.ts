@@ -1,6 +1,6 @@
 import type { Transition } from 'motion/react'
 
-// Motion values specific to this study. The reasoning for each is in NOTES.md.
+// Motion values specific to this study. The reasoning for each is in README.md.
 
 // Surface morph (button to dialog and back). Duration-based, so slow motion
 // is a multiplier on `duration`.

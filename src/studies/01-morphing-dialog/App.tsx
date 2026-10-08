@@ -144,10 +144,6 @@ export function App() {
           <li>Resize the window while the dialog is open.</li>
           <li>Switch the theme in the settings while the dialog is closed.</li>
         </ul>
-        <p className="text-[var(--color-text-muted)]">
-          Decisions, values and known limitations are in the study&apos;s
-          NOTES.md.
-        </p>
       </Section>
 
       <div className="pb-32" />

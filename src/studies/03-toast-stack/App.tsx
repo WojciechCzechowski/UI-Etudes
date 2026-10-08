@@ -207,10 +207,6 @@ export function App() {
           <li>Swipe a toast to the right on a touch screen.</li>
           <li>Resize the window to phone width.</li>
         </ul>
-        <p className="text-[var(--color-text-muted)]">
-          Decisions, values and known limitations are in the study&apos;s
-          NOTES.md.
-        </p>
       </Section>
 
       <div className="pb-48" />
