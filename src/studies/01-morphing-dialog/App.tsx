@@ -136,11 +136,6 @@ export function App() {
             setting has the same effect.
           </li>
           <li>
-            <strong>Theme.</strong> System, Light or Dark, in one click. System
-            follows your operating system. Check the dialog, the error text and
-            the focus rings in both themes.
-          </li>
-          <li>
             <strong>Slow motion.</strong> Runs the morph 2x, 4x or 8x slower so
             you can watch it. Look for stretched text, and for the colour
             changing smoothly. Not available with reduced motion.
@@ -160,7 +155,10 @@ export function App() {
           </li>
           <li>Scroll down before opening the dialog.</li>
           <li>Resize the window while the dialog is open.</li>
-          <li>Switch the theme in the settings while the dialog is closed.</li>
+          <li>
+            Switch the theme with the buttons next to the settings while the
+            dialog is closed.
+          </li>
         </ul>
       </Section>
 

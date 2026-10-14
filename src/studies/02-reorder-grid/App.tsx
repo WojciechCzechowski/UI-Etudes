@@ -135,8 +135,8 @@ export function App() {
             movement in each layout.
           </li>
           <li>
-            <strong>Preview reduced motion, Theme, Slow motion.</strong> Shared
-            by every study.
+            <strong>Preview reduced motion, Slow motion.</strong> Shared by
+            every study.
           </li>
         </ul>
       </Section>

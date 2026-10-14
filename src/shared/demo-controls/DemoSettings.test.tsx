@@ -44,16 +44,12 @@ describe('DemoControls', () => {
 
   it('lists every tweaked setting next to the button', () => {
     render(
-      <DemoSettingsProvider
-        initial={{ reducedMotion: 'on', slowMotion: 4, theme: 'dark' }}
-      >
+      <DemoSettingsProvider initial={{ reducedMotion: 'on', slowMotion: 4 }}>
         <DemoControls />
       </DemoSettingsProvider>,
     )
     const button = screen.getByRole('button', { name: 'Demo settings' })
-    expect(button).toHaveAccessibleDescription(
-      'Reduced motion · 4x slower · Dark theme',
-    )
+    expect(button).toHaveAccessibleDescription('Reduced motion · 4x slower')
   })
 
   it('appends the tweaks of a study after the shared ones', () => {
@@ -73,28 +69,24 @@ describe('theme', () => {
     delete document.documentElement.dataset.theme
   })
 
-  it('is picked with one click in the settings and applied to the root', async () => {
+  it('sits next to the settings button and is not in the panel', async () => {
     const user = userEvent.setup()
+    localStorage.setItem('ui-etudes-theme', 'dark')
     render(
       <DemoSettingsProvider>
         <DemoControls />
       </DemoSettingsProvider>,
     )
-    const root = document.documentElement
-    expect(root).not.toHaveAttribute('data-theme')
-
-    await user.click(screen.getByRole('button', { name: 'Demo settings' }))
     const group = screen.getByRole('radiogroup', { name: 'Theme' })
-    expect(within(group).getByRole('radio', { name: 'System' })).toBeChecked()
-
-    await user.click(within(group).getByRole('radio', { name: 'Dark' }))
-    expect(root).toHaveAttribute('data-theme', 'dark')
+    expect(within(group).getByRole('radio', { name: 'Dark' })).toBeChecked()
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
 
     await user.click(within(group).getByRole('radio', { name: 'Light' }))
-    expect(root).toHaveAttribute('data-theme', 'light')
+    expect(localStorage.getItem('ui-etudes-theme')).toBe('light')
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light')
 
-    await user.click(within(group).getByRole('radio', { name: 'System' }))
-    expect(root).not.toHaveAttribute('data-theme')
+    await user.click(screen.getByRole('button', { name: 'Demo settings' }))
+    expect(screen.getAllByRole('radiogroup', { name: 'Theme' })).toHaveLength(1)
   })
 })
 
@@ -148,10 +140,7 @@ describe('settings sections', () => {
     const order = screen
       .getAllByRole('group')
       .map((group) => group.querySelector('legend')?.textContent)
-    expect(order).toEqual(['Appearance', 'Motion', 'Study'])
-    expect(screen.getByRole('group', { name: 'Appearance' })).toContainElement(
-      screen.getByRole('radiogroup', { name: 'Theme' }),
-    )
+    expect(order).toEqual(['Motion', 'Study'])
     expect(screen.getByRole('group', { name: 'Motion' })).toContainElement(
       screen.getByRole('radiogroup', { name: 'Slow down by' }),
     )

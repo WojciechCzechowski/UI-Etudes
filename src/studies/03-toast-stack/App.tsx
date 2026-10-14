@@ -212,9 +212,9 @@ export function App() {
             update or to interrupt it.
           </li>
           <li>
-            <strong>Preview reduced motion, Theme, Slow motion.</strong> The
-            shared settings. Check the pile, the icons and the error colour in
-            both themes.
+            <strong>Preview reduced motion, Slow motion.</strong> The shared
+            settings. Check the pile, the icons and the error colour in both
+            themes.
           </li>
         </ul>
       </Section>

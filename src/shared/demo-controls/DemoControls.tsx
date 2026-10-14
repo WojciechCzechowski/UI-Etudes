@@ -1,22 +1,17 @@
-import { Monitor, Moon, Settings, Sun } from 'lucide-react'
+import { Settings } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Popover, RadioGroup } from 'radix-ui'
 import { useId } from 'react'
 import type { ReactNode } from 'react'
+import { ThemeSwitch } from '../ThemeSwitch'
 import {
   describeTweaks,
   useDemoSettings,
   useReduceMotion,
 } from './DemoSettings'
-import type { SlowMotion, Theme } from './DemoSettings'
+import type { SlowMotion } from './DemoSettings'
 
 export type DemoOption<T> = { value: T; label: string; Icon?: LucideIcon }
-
-const themeOptions: DemoOption<Theme>[] = [
-  { value: 'system', label: 'System', Icon: Monitor },
-  { value: 'light', label: 'Light', Icon: Sun },
-  { value: 'dark', label: 'Dark', Icon: Moon },
-]
 
 // Titled "Slow down by", so that "2x" reads as twice as slow, not twice as fast.
 const slowMotionOptions: DemoOption<SlowMotion>[] = [
@@ -142,14 +137,6 @@ export function DemoControls({
             className="z-40 w-72 max-w-[calc(100vw-2rem)] rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-sm shadow-lg"
           >
             <div>
-              <DemoSection legend="Appearance">
-                <DemoOptionGroup
-                  label="Theme"
-                  value={settings.theme}
-                  options={themeOptions}
-                  onChange={(theme) => update({ theme })}
-                />
-              </DemoSection>
               <DemoSection legend="Motion">
                 <label className="flex items-center gap-2">
                   <input
@@ -189,6 +176,7 @@ export function DemoControls({
           </Popover.Content>
         </Popover.Portal>
       </Popover.Root>
+      <ThemeSwitch />
     </div>
   )
 }

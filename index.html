@@ -8,6 +8,13 @@
       name="description"
       content="Small, finished interaction studies in React: meaningful transitions, responsive layouts and accessibility."
     />
+    <script>
+      try {
+        var theme = localStorage.getItem('ui-etudes-theme')
+        if (theme === 'light' || theme === 'dark')
+          document.documentElement.dataset.theme = theme
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>
