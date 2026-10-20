@@ -20,11 +20,7 @@ export const tabPillSpring: Transition = {
 export const modeSwitchTransition: Transition = tabPillSpring
 
 // The suggestions bar opening or closing.
-export const suggestionsToggleTransition: Transition = {
-  type: 'tween',
-  duration: 0.15,
-  ease: 'easeInOut',
-}
+export const suggestionsToggleTransition: Transition = tabPillSpring
 
 // The text growing or shrinking the textarea: the card follows at once.
 export const textGrowTransition: Transition = { duration: 0 }

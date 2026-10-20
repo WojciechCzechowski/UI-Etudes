@@ -7,13 +7,14 @@ import {
   useReduceMotion,
   useScaleTransition,
 } from '../../shared/demo-controls/DemoSettings'
-import { fadeIn, fadeOut } from '../../shared/motion'
+import { fadeIn } from '../../shared/motion'
 import { ModeTabs } from './ModeTabs'
 import { modes } from './modes'
 import type { Mode } from './modes'
 import {
   modeSwitchTransition,
   suggestionsToggleTransition,
+  tabPillSpring,
   textGrowTransition,
 } from './motion'
 
@@ -80,17 +81,21 @@ export function PromptComposer() {
                 key="suggestions"
                 aria-label="Suggestions"
                 layout="position"
-                initial={{ opacity: 0 }}
+                initial={{ opacity: 0, y: '-100%' }}
                 animate={{
-                  opacity: 1,
-                  transition: scale({
-                    ...fadeIn,
-                    delay: reduceMotion ? 0 : 0.075,
-                  }),
+                  y: '0%',
+                  opacity: 100,
+                  transition: {
+                    opacity: scale({ duration: .5 }),
+                    y: scale(tabPillSpring)},
                 }}
                 exit={{
                   opacity: 0,
-                  transition: reduceMotion ? { duration: 0 } : scale(fadeOut),
+                  y: '-100%',
+                  transition: {
+                    opacity: scale({ duration: .5 }),
+                    y: scale(tabPillSpring)
+                  },
                 }}
                 className="flex flex-wrap gap-2 border-b border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-text)_5%,transparent)] px-4 py-3"
               >
@@ -187,6 +192,14 @@ export function PromptComposer() {
               <motion.textarea
                 layout="position"
                 aria-label="Prompt"
+                initial={{ opacity: 0 }}
+                animate={{
+                  opacity: 1,
+                  transition: scale({
+                    ...fadeIn,
+                    delay: reduceMotion ? 0 : 0.09,
+                  }),
+                }}
                 value={prompt}
                 onChange={(event) => {
                   setPrompt(event.target.value)
