@@ -29,4 +29,10 @@ export const studies: StudyEntry[] = [
     summary:
       'Notifications that stack, update in place and get out of the way.',
   },
+  {
+    slug: 'prompt-composer',
+    dir: '04-prompt-composer',
+    title: 'Morphing prompt composer',
+    summary: 'One composer card that changes shape between three modes.',
+  },
 ]

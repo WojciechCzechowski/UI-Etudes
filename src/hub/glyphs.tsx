@@ -119,10 +119,21 @@ const toastStack = (
   </>
 )
 
+// One surface with a tab strip, a prompt line and a send button.
+const promptComposer = (
+  <>
+    <rect x="10" y="8" width="52" height="36" rx="8" {...stroke} />
+    <rect x="15" y="13" width="26" height="8" rx="4" {...stroke} />
+    <line x1="16" y1="30" x2="38" y2="30" {...stroke} />
+    <circle cx="53" cy="35" r="5" fill={accent} />
+  </>
+)
+
 const glyphs: Record<string, ReactElement> = {
   'morphing-dialog': morphingDialog,
   'reorder-grid': reorderGrid,
   'toast-stack': toastStack,
+  'prompt-composer': promptComposer,
 }
 
 export function StudyGlyph({ slug }: { slug: string }) {
