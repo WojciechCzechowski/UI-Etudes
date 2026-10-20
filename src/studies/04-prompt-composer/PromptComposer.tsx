@@ -1,8 +1,16 @@
 import { ArrowUp, AtSign, ListFilterPlus, X } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
 import { Tabs } from 'radix-ui'
 import { useState } from 'react'
-import { modeOrder, modes } from './modes'
+import {
+  useReduceMotion,
+  useScaleTransition,
+} from '../../shared/demo-controls/DemoSettings'
+import { fadeIn, fadeOut } from '../../shared/motion'
+import { ModeTabs } from './ModeTabs'
+import { modes } from './modes'
 import type { Mode } from './modes'
+import { composerSpring } from './motion'
 
 const focusRing =
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]'
@@ -17,153 +25,181 @@ export function PromptComposer() {
   const [mode, setMode] = useState<Mode>('image')
   // Shared by all modes, so it survives a visit to one without a text field.
   const [prompt, setPrompt] = useState('')
+  const [showSuggestions, setShowSuggestions] = useState(false)
   const config = modes[mode]
+  const reduceMotion = useReduceMotion()
+  const scale = useScaleTransition()
+  const suggestionsOpen = showSuggestions && config.suggestions.length > 0
 
+  // The card changes height by layout animation: the DOM jumps to the final
+  // size once, and Motion plays the difference as a transform, so nothing is
+  // laid out per frame. Radius and shadow are style values so Motion can
+  // correct them while the card is scaled.
   return (
     <Tabs.Root
       value={mode}
       onValueChange={(value) => setMode(value as Mode)}
-      className="overflow-hidden rounded-[28px] border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_80%,transparent)] shadow-[0_20px_60px_-20px_rgb(0_0_0/0.3)] backdrop-blur-2xl"
+      asChild
     >
-      {config.suggestions.length > 0 && (
-        <ul
-          aria-label="Suggestions"
-          className="flex flex-wrap gap-2 border-b border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-text)_5%,transparent)] px-4 py-3"
-        >
-          {config.suggestions.map((suggestion) => (
-            <li key={suggestion}>
-              <button
-                type="button"
-                onClick={() => setPrompt(suggestion)}
-                className={`${pill} flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium`}
-              >
-                <ListFilterPlus
-                  aria-hidden="true"
-                  className="size-4 text-[var(--color-text-muted)]"
-                />
-                {suggestion}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div className="flex flex-col gap-3 p-3 sm:p-4">
-        <div className="flex items-center justify-between gap-3">
-          <Tabs.List
-            aria-label="Generation type"
-            className={`flex rounded-2xl p-1 ${muted}`}
-          >
-            {modeOrder.map((value) => (
-              <Tabs.Trigger
-                key={value}
-                value={value}
-                className={`rounded-xl px-3 py-1.5 text-sm font-medium text-[var(--color-text-muted)] data-[state=active]:bg-[var(--color-surface)] data-[state=active]:text-[var(--color-text)] data-[state=active]:shadow-sm sm:px-4 ${focusRing}`}
-              >
-                {modes[value].label}
-              </Tabs.Trigger>
-            ))}
-          </Tabs.List>
-
-          {config.brandKit ? (
-            <div className={`flex gap-1 rounded-2xl p-1 ${muted}`}>
-              <button
-                type="button"
-                className={`${pill} flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm font-medium`}
-              >
-                <AtSign aria-hidden="true" className="size-4" />
-                Brand Kit
-              </button>
-              <button
-                type="button"
-                aria-label="Remove Brand Kit"
-                className={`${pill} grid size-8 place-items-center rounded-xl`}
-              >
-                <X aria-hidden="true" className="size-4" />
-              </button>
-            </div>
-          ) : (
-            <div className={`rounded-2xl p-1 ${muted}`}>
-              <button
-                type="button"
-                aria-label="Prompt suggestions"
-                className={`${pill} grid size-8 place-items-center rounded-xl`}
-              >
-                <ListFilterPlus aria-hidden="true" className="size-4" />
-              </button>
-            </div>
+      <motion.div
+        layout={!reduceMotion}
+        transition={scale(composerSpring)}
+        style={{
+          borderRadius: 28,
+          boxShadow: '0 20px 60px -20px rgb(0 0 0 / 0.3)',
+        }}
+        className="relative overflow-hidden border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_80%,transparent)] backdrop-blur-2xl"
+      >
+        {/* popLayout takes the leaving bar out of the flow, so the card starts
+          shrinking at once while the bar fades out where it was. */}
+        <AnimatePresence initial={false} mode="popLayout">
+          {suggestionsOpen && (
+            <motion.ul
+              key="suggestions"
+              aria-label="Suggestions"
+              layout="position"
+              initial={{ opacity: 0 }}
+              animate={{
+                opacity: 1,
+                transition: scale({
+                  ...fadeIn,
+                  delay: reduceMotion ? 0 : 0.15,
+                }),
+              }}
+              exit={{
+                opacity: 0,
+                transition: reduceMotion ? { duration: 0 } : scale(fadeOut),
+              }}
+              className="flex flex-wrap gap-2 border-b border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-text)_5%,transparent)] px-4 py-3"
+            >
+              {config.suggestions.map((suggestion) => (
+                <li key={suggestion}>
+                  <button
+                    type="button"
+                    onClick={() => setPrompt(suggestion)}
+                    className={`${pill} flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium`}
+                  >
+                    <ListFilterPlus
+                      aria-hidden="true"
+                      className="size-4 text-[var(--color-text-muted)]"
+                    />
+                    {suggestion}
+                  </button>
+                </li>
+              ))}
+            </motion.ul>
           )}
-        </div>
+        </AnimatePresence>
 
-        <ul aria-label="References" className="flex flex-wrap gap-2">
-          {config.slots.map(({ label, Icon }) => (
-            <li key={label}>
-              <button
-                type="button"
-                className={`flex h-[74px] flex-col items-center justify-center gap-1.5 rounded-2xl px-5 text-sm text-[var(--color-text-muted)] ${muted} ${focusRing}`}
-              >
-                <Icon aria-hidden="true" className="size-5" />
-                {label}
-              </button>
-            </li>
-          ))}
-        </ul>
-
-        {config.placeholder && (
-          <textarea
-            aria-label="Prompt"
-            rows={2}
-            value={prompt}
-            onChange={(event) => setPrompt(event.target.value)}
-            placeholder={config.placeholder}
-            className="resize-none bg-transparent px-1 py-2 text-lg placeholder:text-[var(--color-text-muted)] focus-visible:outline-none"
-          />
-        )}
-
-        <div className="flex items-end justify-between gap-3">
-          <ul
-            aria-label="Settings"
-            className="flex flex-wrap items-center gap-x-5 gap-y-2"
-          >
-            {config.settings.map(({ label, Icon, disabled }, index) => (
-              <li key={`${index}-${label}`}>
+        <motion.div
+          layout="position"
+          className="flex flex-col gap-3 p-3 sm:p-4"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <ModeTabs activeMode={mode} />
+            <div className={`flex gap-1 rounded-2xl p-1 ${muted}`}>
+              {config.brandKit && (
                 <button
                   type="button"
-                  aria-disabled={disabled || undefined}
-                  className={`flex items-center gap-2 rounded-md text-sm ${focusRing} ${
-                    disabled
-                      ? 'text-[var(--color-text-muted)] opacity-60'
-                      : 'text-[var(--color-text)]'
-                  }`}
+                  className={`${pill} flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm font-medium`}
                 >
-                  <Icon
-                    aria-hidden="true"
-                    className="size-4 text-[var(--color-text-muted)]"
-                  />
+                  <AtSign aria-hidden="true" className="size-4" />
+                  Brand Kit
+                </button>
+              )}
+              <button
+                type="button"
+                aria-label={
+                  showSuggestions ? 'Hide suggestions' : 'Show suggestions'
+                }
+                onClick={() => setShowSuggestions((prev) => !prev)}
+                disabled={!config.brandKit}
+                className={`${pill} grid size-8 place-items-center rounded-xl`}
+              >
+                <span
+                  className={`col-span-full row-span-full transition-[rotate,opacity] ${!config.brandKit ? 'opacity-0 rotate-90' : showSuggestions ? 'opacity-100 rotate-0' : 'opacity-0 rotate-90'}`}
+                >
+                  <X aria-hidden="true" className="size-4" />
+                </span>
+                <span
+                  className={`col-span-full row-span-full transition-[rotate,opacity] ${config.brandKit ? (showSuggestions ? 'opacity-0 -rotate-90' : 'opacity-100 rotate-0') : 'opacity-50'}`}
+                >
+                  <ListFilterPlus aria-hidden="true" className="size-4" />
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <ul aria-label="References" className="flex flex-wrap gap-2">
+            {config.slots.map(({ label, Icon }) => (
+              <li key={label}>
+                <button
+                  type="button"
+                  className={`flex h-[74px] flex-col items-center justify-center gap-1.5 rounded-2xl px-5 text-sm text-[var(--color-text-muted)] ${muted} ${focusRing}`}
+                >
+                  <Icon aria-hidden="true" className="size-5" />
                   {label}
                 </button>
               </li>
             ))}
           </ul>
 
-          <div className="flex shrink-0 items-center">
-            {config.credits && (
-              <span
-                className={`-mr-5 rounded-full py-2.5 pr-8 pl-4 text-sm text-[var(--color-text-muted)] ${muted}`}
-              >
-                {config.credits}
-              </span>
-            )}
-            <button
-              type="button"
-              aria-label="Generate"
-              className={`relative grid size-11 place-items-center rounded-full bg-[var(--color-text)] text-[var(--color-bg)] ${focusRing}`}
+          {config.placeholder && (
+            <textarea
+              aria-label="Prompt"
+              rows={2}
+              value={prompt}
+              onChange={(event) => setPrompt(event.target.value)}
+              placeholder={config.placeholder}
+              className="resize-none bg-transparent px-1 py-2 text-lg placeholder:text-[var(--color-text-muted)] focus-visible:outline-none"
+            />
+          )}
+
+          <div className="flex items-end justify-between gap-3">
+            <ul
+              aria-label="Settings"
+              className="flex flex-wrap items-center gap-x-5 gap-y-2"
             >
-              <ArrowUp aria-hidden="true" className="size-5" />
-            </button>
+              {config.settings.map(({ label, Icon, disabled }, index) => (
+                <li key={`${index}-${label}`}>
+                  <button
+                    type="button"
+                    aria-disabled={disabled || undefined}
+                    className={`flex items-center gap-2 rounded-md text-sm ${focusRing} ${
+                      disabled
+                        ? 'text-[var(--color-text-muted)] opacity-60'
+                        : 'text-[var(--color-text)]'
+                    }`}
+                  >
+                    <Icon
+                      aria-hidden="true"
+                      className="size-4 text-[var(--color-text-muted)]"
+                    />
+                    {label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            <div className="flex shrink-0 items-center">
+              {config.credits && (
+                <span
+                  className={`-mr-5 rounded-full py-2.5 pr-8 pl-4 text-sm text-[var(--color-text-muted)] ${muted}`}
+                >
+                  {config.credits}
+                </span>
+              )}
+              <button
+                type="button"
+                aria-label="Generate"
+                className={`relative grid size-11 place-items-center rounded-full bg-[var(--color-text)] text-[var(--color-bg)] ${focusRing}`}
+              >
+                <ArrowUp aria-hidden="true" className="size-5" />
+              </button>
+            </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </Tabs.Root>
   )
 }
