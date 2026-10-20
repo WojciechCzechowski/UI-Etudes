@@ -1,5 +1,6 @@
 import { ArrowUp, AtSign, ListFilterPlus, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
+import type { Transition } from 'motion/react'
 import { Tabs } from 'radix-ui'
 import { useState } from 'react'
 import {
@@ -10,7 +11,19 @@ import { fadeIn, fadeOut } from '../../shared/motion'
 import { ModeTabs } from './ModeTabs'
 import { modes } from './modes'
 import type { Mode } from './modes'
-import { composerSpring } from './motion'
+import {
+  modeSwitchTransition,
+  suggestionsToggleTransition,
+  textGrowTransition,
+} from './motion'
+
+type Cause = 'mode' | 'suggestions' | 'text'
+
+const cardTransitions: Record<Cause, Transition> = {
+  mode: modeSwitchTransition,
+  suggestions: suggestionsToggleTransition,
+  text: textGrowTransition,
+}
 
 const focusRing =
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]'
@@ -26,6 +39,9 @@ export function PromptComposer() {
   // Shared by all modes, so it survives a visit to one without a text field.
   const [prompt, setPrompt] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
+  // What last changed the card's height. It picks the card's transition and is
+  // set in the same event as the change, so both land in one render.
+  const [cause, setCause] = useState<Cause>('mode')
   const config = modes[mode]
   const reduceMotion = useReduceMotion()
   const scale = useScaleTransition()
@@ -38,12 +54,15 @@ export function PromptComposer() {
   return (
     <Tabs.Root
       value={mode}
-      onValueChange={(value) => setMode(value as Mode)}
+      onValueChange={(value) => {
+        setMode(value as Mode)
+        setCause('mode')
+      }}
       asChild
     >
       <motion.div
         layout={!reduceMotion}
-        transition={scale(composerSpring)}
+        transition={scale(cardTransitions[cause])}
         style={{
           borderRadius: 28,
           boxShadow: '0 20px 60px -20px rgb(0 0 0 / 0.3)',
@@ -63,7 +82,7 @@ export function PromptComposer() {
                 opacity: 1,
                 transition: scale({
                   ...fadeIn,
-                  delay: reduceMotion ? 0 : 0.15,
+                  delay: reduceMotion ? 0 : 0.075,
                 }),
               }}
               exit={{
@@ -76,7 +95,10 @@ export function PromptComposer() {
                 <li key={suggestion}>
                   <button
                     type="button"
-                    onClick={() => setPrompt(suggestion)}
+                    onClick={() => {
+                      setPrompt(suggestion)
+                      setCause('text')
+                    }}
                     className={`${pill} flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium`}
                   >
                     <ListFilterPlus
@@ -91,11 +113,18 @@ export function PromptComposer() {
           )}
         </AnimatePresence>
 
+        {/* Each row that stays between modes has its own layout="position",
+            so it travels from its old place to its new one. One wrapper for
+            all of them moved by its top edge and left the footer floating
+            above the bottom of the card while the card shrank. */}
         <motion.div
           layout="position"
           className="flex flex-col gap-3 p-3 sm:p-4"
         >
-          <div className="flex items-center justify-between gap-3">
+          <motion.div
+            layout="position"
+            className="flex items-center justify-between gap-3"
+          >
             <ModeTabs activeMode={mode} />
             <div className={`flex gap-1 rounded-2xl p-1 ${muted}`}>
               {config.brandKit && (
@@ -112,7 +141,10 @@ export function PromptComposer() {
                 aria-label={
                   showSuggestions ? 'Hide suggestions' : 'Show suggestions'
                 }
-                onClick={() => setShowSuggestions((prev) => !prev)}
+                onClick={() => {
+                  setShowSuggestions((prev) => !prev)
+                  setCause('suggestions')
+                }}
                 disabled={!config.brandKit}
                 className={`${pill} grid size-8 place-items-center rounded-xl`}
               >
@@ -128,9 +160,13 @@ export function PromptComposer() {
                 </span>
               </button>
             </div>
-          </div>
+          </motion.div>
 
-          <ul aria-label="References" className="flex flex-wrap gap-2">
+          <motion.ul
+            aria-label="References"
+            layout="position"
+            className="flex flex-wrap gap-2"
+          >
             {config.slots.map(({ label, Icon }) => (
               <li key={label}>
                 <button
@@ -142,20 +178,26 @@ export function PromptComposer() {
                 </button>
               </li>
             ))}
-          </ul>
+          </motion.ul>
 
           {config.placeholder && (
-            <textarea
+            <motion.textarea
+              layout="position"
               aria-label="Prompt"
-              rows={2}
               value={prompt}
-              onChange={(event) => setPrompt(event.target.value)}
+              onChange={(event) => {
+                setPrompt(event.target.value)
+                setCause('text')
+              }}
               placeholder={config.placeholder}
-              className="resize-none bg-transparent px-1 py-2 text-lg placeholder:text-[var(--color-text-muted)] focus-visible:outline-none"
+              className="field-sizing-content max-h-[calc(8*1.75rem+1rem)] min-h-[calc(2*1.75rem+1rem)] w-full resize-none overflow-y-auto bg-transparent px-1 py-2 text-lg placeholder:text-[var(--color-text-muted)] focus-visible:outline-none"
             />
           )}
 
-          <div className="flex items-end justify-between gap-3">
+          <motion.div
+            layout="position"
+            className="flex items-end justify-between gap-3"
+          >
             <ul
               aria-label="Settings"
               className="flex flex-wrap items-center gap-x-5 gap-y-2"
@@ -197,7 +239,7 @@ export function PromptComposer() {
                 <ArrowUp aria-hidden="true" className="size-5" />
               </button>
             </div>
-          </div>
+          </motion.div>
         </motion.div>
       </motion.div>
     </Tabs.Root>
