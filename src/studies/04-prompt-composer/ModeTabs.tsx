@@ -14,7 +14,7 @@ const focusRing =
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]'
 
 const pillClass =
-  'absolute top-1 bottom-1 left-0 rounded-xl bg-[var(--color-surface)] shadow-[0_1px_2px_rgb(0_0_0/0.1)]'
+  'absolute left-0 rounded-xl bg-[var(--color-surface)] shadow-[0_1px_2px_rgb(0_0_0/0.1)]'
 
 type Box = { x: number; width: number }
 
@@ -60,7 +60,7 @@ export function ModeTabs({ activeMode }: { activeMode: Mode }) {
         // First render: `initial={false}` places it without travelling.
         <motion.span
           aria-hidden="true"
-          className={`${pillClass} will-change-transform`}
+          className={`${pillClass} top-1 bottom-1 will-change-transform`}
           initial={false}
           animate={{ x: box.x, width: box.width }}
           transition={scale(tabPillSpring)}
@@ -82,7 +82,7 @@ export function ModeTabs({ activeMode }: { activeMode: Mode }) {
               {value === activeMode && (
                 <motion.span
                   aria-hidden="true"
-                  className={`${pillClass} right-0`}
+                  className={`${pillClass} inset-y-0 right-0`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
