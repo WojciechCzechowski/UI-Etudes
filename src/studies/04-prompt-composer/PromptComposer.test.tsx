@@ -19,14 +19,14 @@ const render = (suggestionsDelayMs = 0) =>
 
 const refs = () => within(screen.getByRole('list', { name: 'References' }))
 
-test('starts on Image with its slot and credits, suggestions closed', () => {
+test('starts on Image with its slot and credits, suggestions open', () => {
   render()
   expect(screen.getByRole('tab', { name: 'Image' })).toHaveAttribute(
     'aria-selected',
     'true',
   )
   expect(refs().getAllByRole('button')).toHaveLength(1)
-  expect(screen.queryByRole('list', { name: 'Suggestions' })).toBeNull()
+  expect(screen.getByRole('list', { name: 'Suggestions' })).toBeInTheDocument()
   expect(screen.getByText('52 left')).toBeVisible()
 })
 
@@ -90,18 +90,18 @@ test('the pill sits in the selected tab only', async () => {
 test('the suggestions button opens and closes the bar', async () => {
   const user = userEvent.setup()
   render()
-  await user.click(screen.getByRole('button', { name: 'Show suggestions' }))
   expect(screen.getByRole('list', { name: 'Suggestions' })).toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: 'Hide suggestions' }))
   await waitFor(() =>
     expect(screen.queryByRole('list', { name: 'Suggestions' })).toBeNull(),
   )
+  await user.click(screen.getByRole('button', { name: 'Show suggestions' }))
+  expect(screen.getByRole('list', { name: 'Suggestions' })).toBeInTheDocument()
 })
 
 test('the bar closes on Lip sync and the button is disabled there', async () => {
   const user = userEvent.setup()
   render()
-  await user.click(screen.getByRole('button', { name: 'Show suggestions' }))
   await user.click(screen.getByRole('tab', { name: 'Lip sync' }))
   await waitFor(() =>
     expect(screen.queryByRole('list', { name: 'Suggestions' })).toBeNull(),
@@ -110,9 +110,7 @@ test('the bar closes on Lip sync and the button is disabled there', async () => 
 })
 
 test('the suggestions load first, then the chips replace the loading state', async () => {
-  const user = userEvent.setup()
   render(200)
-  await user.click(screen.getByRole('button', { name: 'Show suggestions' }))
   const bar = screen.getByRole('list', { name: 'Suggestions' })
   expect(bar).toHaveAttribute('aria-busy', 'true')
   expect(within(bar).queryByRole('button')).toBeNull()
@@ -132,7 +130,6 @@ test('the suggestions load first, then the chips replace the loading state', asy
 test('reopening the bar loads the suggestions again', async () => {
   const user = userEvent.setup()
   render(100)
-  await user.click(screen.getByRole('button', { name: 'Show suggestions' }))
   await waitFor(() =>
     expect(screen.getByRole('list', { name: 'Suggestions' })).toHaveAttribute(
       'aria-busy',
