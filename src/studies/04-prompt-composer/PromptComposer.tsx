@@ -1,4 +1,4 @@
-import { ArrowUp, AtSign, ListFilterPlus, X } from 'lucide-react'
+import { ArrowUp, AtSign, ListFilterPlus, X, Image } from 'lucide-react'
 import { AnimatePresence, MotionConfig, motion } from 'motion/react'
 import type { Transition } from 'motion/react'
 import { Tabs } from 'radix-ui'
@@ -113,7 +113,7 @@ export function PromptComposer({
         <motion.div
           layout={!reduceMotion}
           style={{
-            borderRadius: 28,
+            borderRadius: 20,
             boxShadow: '0 20px 60px -20px rgb(0 0 0 / 0.3)',
           }}
           className="relative overflow-hidden border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_80%,transparent)] backdrop-blur-2xl"
@@ -150,7 +150,7 @@ export function PromptComposer({
                         },
                       }
                 }
-                className="relative flex min-h-[calc(2.25rem+1.5rem)] flex-wrap gap-2 overflow-hidden border-b border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-text)_5%,transparent)] px-4 py-3"
+                className="relative flex min-h-[calc(2.25rem+1.5rem)] flex-wrap gap-2 overflow-hidden border-b border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-text)_5%,transparent)] p-3"
               >
                 {/* Stripes sweep across the bar while it loads and fade out as
                 the chips fade in. Transform and opacity only. Reduced motion
@@ -193,7 +193,7 @@ export function PromptComposer({
                           setPrompt(prompt)
                           setCause('text')
                         }}
-                        className={`${pill} flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium`}
+                        className={`${pill} flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium`}
                       >
                         <ListFilterPlus
                           aria-hidden="true"
@@ -211,10 +211,7 @@ export function PromptComposer({
             so it travels from its old place to its new one. One wrapper for
             all of them moved by its top edge and left the footer floating
             above the bottom of the card while the card shrank. */}
-          <motion.div
-            layout={rowLayout}
-            className="flex flex-col gap-3 p-3 sm:p-4"
-          >
+          <motion.div layout={rowLayout} className="flex flex-col gap-2 p-2">
             <motion.div
               layout={rowLayout}
               className="flex items-center justify-between gap-3"
@@ -294,16 +291,16 @@ export function PromptComposer({
                   setCause('text')
                 }}
                 placeholder={config.placeholder}
-                className="field-sizing-content max-h-[calc(8*1.75rem+1rem)] min-h-[calc(2*1.75rem+1rem)] w-full resize-none overflow-y-auto bg-transparent px-1 py-2 text-lg placeholder:text-[var(--color-text-muted)] focus-visible:outline-none"
+                className="field-sizing-content max-h-[calc(8*1.75rem+1rem)] min-h-[calc(2*1.75rem+1rem)] w-full resize-none overflow-y-auto bg-transparent px-2 py-2 text-lg placeholder:text-[var(--color-text-muted)] focus-visible:outline-none"
               />
             )}
             <motion.div
               layout={rowLayout}
-              className="flex items-end justify-between gap-3"
+              className="flex items-center justify-between gap-3"
             >
               <ul
                 aria-label="Settings"
-                className="flex flex-wrap items-center gap-x-5 gap-y-2"
+                className="flex flex-wrap items-center gap-x-5 gap-y-2 px-2"
               >
                 {config.settings.map(({ label, Icon, disabled }, index) => (
                   <li key={`${index}-${label}`}>
@@ -326,7 +323,7 @@ export function PromptComposer({
                 ))}
               </ul>
 
-              <div className="flex shrink-0 items-center">
+              <div className="flex shrink-0 items-center p-0.5">
                 {/* Hidden, it slides right behind the button. The wrapper clips it
                 at the pill's resting right edge, which is under the button, so
                 it never shows past the button. It keeps its place in the
@@ -345,7 +342,7 @@ export function PromptComposer({
                       transition={scale(
                         reduceMotion ? crossfade : creditsPillTransition,
                       )}
-                      className={`block rounded-full py-2.5 pr-8 pl-4 text-sm text-[var(--color-text-muted)] ${muted}`}
+                      className={`block rounded-l-full py-2 pr-8 pl-2.5 text-sm text-[var(--color-text-muted)] ${muted}`}
                     >
                       <motion.span
                         initial={false}
@@ -360,8 +357,9 @@ export function PromptComposer({
                               }
                             : fadeOut,
                         )}
-                        className="block"
+                        className="flex items-center gap-1"
                       >
+                        <Image aria-hidden="true" className="size-4" />
                         {credits}
                       </motion.span>
                     </motion.span>
@@ -370,9 +368,9 @@ export function PromptComposer({
                 <button
                   type="button"
                   aria-label="Generate"
-                  className={`relative grid size-11 place-items-center rounded-full bg-[var(--color-text)] text-[var(--color-bg)] ${focusRing}`}
+                  className={`relative grid size-9 place-items-center rounded-full bg-[var(--color-text)] text-[var(--color-bg)] ${focusRing}`}
                 >
-                  <ArrowUp aria-hidden="true" className="size-5" />
+                  <ArrowUp aria-hidden="true" className="size-4" />
                 </button>
               </div>
             </motion.div>
