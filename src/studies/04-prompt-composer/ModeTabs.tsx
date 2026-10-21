@@ -30,6 +30,11 @@ export function ModeTabs({ activeMode }: { activeMode: Mode }) {
   const list = useRef<HTMLDivElement>(null)
   const tabs = useRef(new Map<Mode, HTMLElement>())
   const [box, setBox] = useState<Box | null>(null)
+  // Radix focuses a tab from script on mouse down, which some browsers treat
+  // as keyboard focus and draw the ring on the first click after a load. While
+  // the last input was a pointer the ring is hidden. Any key, or focus
+  // leaving the strip (so Tab back in), brings it back.
+  const [pointer, setPointer] = useState(false)
 
   // Measured before paint, so the first frame already has the pill in place.
   // Also re-measured when the strip changes size (window resize, font load).
@@ -54,7 +59,15 @@ export function ModeTabs({ activeMode }: { activeMode: Mode }) {
     <Tabs.List
       ref={list}
       aria-label="Generation type"
-      className="relative flex rounded-2xl bg-[color-mix(in_srgb,var(--color-text)_7%,transparent)] p-1"
+      data-pointer={pointer || undefined}
+      onPointerDownCapture={() => setPointer(true)}
+      onKeyDownCapture={() => setPointer(false)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          setPointer(false)
+        }
+      }}
+      className="group/tabs relative flex rounded-2xl bg-[color-mix(in_srgb,var(--color-text)_7%,transparent)] p-1"
     >
       {!reduceMotion && box && (
         // First render: `initial={false}` places it without travelling.
@@ -74,7 +87,7 @@ export function ModeTabs({ activeMode }: { activeMode: Mode }) {
             else tabs.current.delete(value)
           }}
           value={value}
-          className={`relative rounded-xl px-3 py-1.5 text-sm font-medium text-[var(--color-text-muted)] transition-colors duration-150 data-[state=active]:text-[var(--color-text)] sm:px-4 ${focusRing}`}
+          className={`relative rounded-xl px-3 py-1.5 text-sm font-medium text-[var(--color-text-muted)] transition-colors duration-150 data-[state=active]:text-[var(--color-text)] sm:px-4 ${focusRing} group-data-[pointer]/tabs:focus-visible:outline-none`}
         >
           {reduceMotion && (
             // No travel: the pill fades out of one tab and into the next.
