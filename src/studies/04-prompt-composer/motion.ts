@@ -49,3 +49,18 @@ export const chipStagger = 0.05
 // How long the stripes keep sweeping after the chips start to appear. One
 // sweep, so they leave on a whole loop.
 export const stripeLinger = 0.6
+
+// The composer sliding up from the bottom edge on page load. It waits for the
+// page content to settle: the shared entrance lifts the title and content over
+// 0.45s with a 0.06s stagger, so the slide starts at 0.5s. Same ease as that
+// entrance (expo out, fast start and a long settle).
+export const composerEntrance = {
+  slide: {
+    duration: 0.5,
+    delay: 0.2,
+    ease: [0.22, 1, 0.36, 1],
+  } satisfies Transition,
+  // Reduced motion: no slide and no fade (a fade is what glitches the blur). The
+  // composer appears at once, after the page's own fade is done.
+  reducedDelay: 0.15,
+}
