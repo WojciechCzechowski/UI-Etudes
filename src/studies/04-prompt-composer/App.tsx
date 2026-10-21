@@ -1,6 +1,12 @@
+import { useState } from 'react'
 import { PageShell } from '../../shared/PageShell'
 import { DemoControls } from '../../shared/demo-controls/DemoControls'
 import { PromptComposer } from './PromptComposer'
+import {
+  defaultPromptSettings,
+  describePrompt,
+  PromptControls,
+} from './PromptControls'
 
 // Stand-ins for the generations behind the composer: a gradient per card.
 const cards = [
@@ -15,14 +21,18 @@ const cards = [
 ]
 
 export function App() {
+  const [settings, setSettings] = useState(defaultPromptSettings)
+
   return (
     <PageShell
       title="Morphing prompt composer"
       floating={
         <>
-          <DemoControls tweaks={[]} />
+          <DemoControls tweaks={describePrompt(settings)}>
+            <PromptControls value={settings} onChange={setSettings} />
+          </DemoControls>
           <div className="fixed inset-x-0 bottom-0 mx-auto w-full max-w-3xl px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-            <PromptComposer />
+            <PromptComposer suggestionsDelayMs={settings.suggestionsMs} />
           </div>
         </>
       }

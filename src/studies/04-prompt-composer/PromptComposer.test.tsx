@@ -10,10 +10,10 @@ import { DemoSettingsProvider } from '../../shared/demo-controls/DemoSettings'
 import { PromptComposer } from './PromptComposer'
 
 // Reduced motion keeps the tests free of the pill's spring.
-const render = () =>
+const render = (suggestionsDelayMs = 0) =>
   rtlRender(
     <DemoSettingsProvider initial={{ reducedMotion: 'on' }}>
-      <PromptComposer />
+      <PromptComposer suggestionsDelayMs={suggestionsDelayMs} />
     </DemoSettingsProvider>,
   )
 
@@ -28,6 +28,17 @@ test('starts on Image with its slot and credits, suggestions closed', () => {
   expect(refs().getAllByRole('button')).toHaveLength(1)
   expect(screen.queryByRole('list', { name: 'Suggestions' })).toBeNull()
   expect(screen.getByText('52 left')).toBeVisible()
+})
+
+test('the credits pill is hidden from assistive tech outside Image', async () => {
+  const user = userEvent.setup()
+  render()
+  const pill = screen.getByText('52 left').parentElement
+  expect(pill).not.toHaveAttribute('aria-hidden')
+  await user.click(screen.getByRole('tab', { name: 'Video' }))
+  expect(pill).toHaveAttribute('aria-hidden', 'true')
+  await user.click(screen.getByRole('tab', { name: 'Image' }))
+  expect(pill).not.toHaveAttribute('aria-hidden')
 })
 
 test('Video shows five slots and Lip sync shows two without suggestions', async () => {
@@ -96,4 +107,45 @@ test('the bar closes on Lip sync and the button is disabled there', async () => 
     expect(screen.queryByRole('list', { name: 'Suggestions' })).toBeNull(),
   )
   expect(screen.getByRole('button', { name: /suggestions/ })).toBeDisabled()
+})
+
+test('the suggestions load first, then the chips replace the loading state', async () => {
+  const user = userEvent.setup()
+  render(200)
+  await user.click(screen.getByRole('button', { name: 'Show suggestions' }))
+  const bar = screen.getByRole('list', { name: 'Suggestions' })
+  expect(bar).toHaveAttribute('aria-busy', 'true')
+  expect(within(bar).queryByRole('button')).toBeNull()
+  await waitFor(() =>
+    expect(
+      within(screen.getByRole('list', { name: 'Suggestions' })).getAllByRole(
+        'button',
+      ),
+    ).toHaveLength(3),
+  )
+  expect(screen.getByRole('list', { name: 'Suggestions' })).toHaveAttribute(
+    'aria-busy',
+    'false',
+  )
+})
+
+test('reopening the bar loads the suggestions again', async () => {
+  const user = userEvent.setup()
+  render(100)
+  await user.click(screen.getByRole('button', { name: 'Show suggestions' }))
+  await waitFor(() =>
+    expect(screen.getByRole('list', { name: 'Suggestions' })).toHaveAttribute(
+      'aria-busy',
+      'false',
+    ),
+  )
+  await user.click(screen.getByRole('button', { name: 'Hide suggestions' }))
+  await waitFor(() =>
+    expect(screen.queryByRole('list', { name: 'Suggestions' })).toBeNull(),
+  )
+  await user.click(screen.getByRole('button', { name: 'Show suggestions' }))
+  expect(screen.getByRole('list', { name: 'Suggestions' })).toHaveAttribute(
+    'aria-busy',
+    'true',
+  )
 })

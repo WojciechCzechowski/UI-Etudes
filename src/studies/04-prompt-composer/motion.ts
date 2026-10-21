@@ -24,3 +24,28 @@ export const suggestionsToggleTransition: Transition = tabPillSpring
 
 // The text growing or shrinking the textarea: the card follows at once.
 export const textGrowTransition: Transition = { duration: 0 }
+
+// The credits pill sliding right behind the Generate button on a mode switch,
+// so it moves with the card.
+export const creditsPillTransition: Transition = modeSwitchTransition
+
+// The label inside it fades out at once (shared `fadeOut`, 0.1s) and fades in
+// after this delay, once the pill is wide enough not to squash it.
+export const creditsTextDelay = 0.1
+
+// The loading stripes in the suggestions bar. They sweep sideways by one
+// period of the pattern (16px along the gradient is 22.63px across at 135deg),
+// so the loop has no jump. `stripeSweep` is the time of one period.
+export const stripePeriod = 22.63
+export const stripeSweep: Transition = {
+  duration: 0.6,
+  ease: 'linear',
+  repeat: Infinity,
+}
+
+// Delay between one suggestion chip fading in and the next.
+export const chipStagger = 0.05
+
+// How long the stripes keep sweeping after the chips start to appear. One
+// sweep, so they leave on a whole loop.
+export const stripeLinger = 0.6
